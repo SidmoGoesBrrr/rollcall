@@ -1,4 +1,5 @@
 // app/profile/[profileId]/page.tsx
+import * as React from 'react';
 import { notFound } from 'next/navigation';
 
 interface Profile {
@@ -20,18 +21,17 @@ async function fetchProfile(profileId: string): Promise<Profile | null> {
 export default async function ProfilePage({
   params,
 }: {
-  params: { profileId: string };
+  params: Promise<{ profileId: string }>;
 }) {
-  console.log('Received params:', params);
-  const { profileId } = params;
-  const profile = await fetchProfile(profileId);
+  const { profileId } = await params;
+  console.log('Received profileId:', profileId);
 
+  const profile = await fetchProfile(profileId);
   console.log('Profile fetched:', profile);
 
   if (!profile) {
-    // For debugging, you can return a simple component instead of calling notFound()
     return <div>Profile Not Found</div>;
-    // Once confirmed, you can switch back to: notFound();
+    // Alternatively, use: notFound();
   }
 
   return (
