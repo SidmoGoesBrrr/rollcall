@@ -2,7 +2,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { ArrowLeft, ArrowRight, User, Calendar, VenusAndMars } from "lucide-react";
+import { ArrowLeft, ArrowRight, User, Calendar } from "lucide-react";
 import RoundedIconButton from "@/components/RoundedIconButton";
 
 const onboardingSteps = [
@@ -12,7 +12,7 @@ const onboardingSteps = [
     id: 3,
     label: "Gender",
     type: "select",
-    Icon: VenusAndMars,
+    Icon: User,
     options: ["Male", "Female", "Other"],
   },
   {
