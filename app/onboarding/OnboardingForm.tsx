@@ -6,17 +6,18 @@ import { ArrowLeft, ArrowRight, User, Calendar } from "lucide-react";
 import RoundedIconButton from "@/components/RoundedIconButton";
 
 const onboardingSteps = [
-  { id: 1, label: "Enter username", type: "input" },
-  { id: 2, label: "Age", type: "input" },
+  { id: 1, label: "Enter Name", type: "input" },
+  { id: 2, label: "Enter School Email ID", type: "input"},
+  { id: 3, label: "Age",   type: "input" },
   {
-    id: 3,
+    id: 4,
     label: "Gender",
     type: "select",
     Icon: User,
     options: ["Male", "Female", "Other"],
   },
   {
-    id: 4,
+    id: 5,
     label: "Enter Year",
     type: "select",
     Icon: Calendar,
@@ -53,7 +54,7 @@ export default function OnboardingForm() {
   const currentQuestion = onboardingSteps[currentStep];
 
   return (
-    <div>
+    <div className="flex flex-col items-center">
       <h2 className="text-2xl font-bold mb-4">{currentQuestion.label}</h2>
 
       {currentQuestion.type === "input" && (
