@@ -10,6 +10,15 @@ export const signUpAction = async (formData: FormData) => {
   const password = formData.get("password")?.toString();
   const supabase = await createClient();
   const origin = (await headers()).get("origin");
+  const regExp = new RegExp("^[a-z0-9._-]+@stonybrook\\.edu$", "i");
+
+  if (!email || !regExp.test(email)) {
+    return encodedRedirect(
+      "error",
+      "/sign-up",
+      "Please use a valid @stonybrook.edu email address.",
+    );
+  }
 
   if (!email || !password) {
     return encodedRedirect(
