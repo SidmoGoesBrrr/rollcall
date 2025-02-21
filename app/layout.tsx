@@ -41,7 +41,7 @@ export default function RootLayout({
               <nav className="w-full flex justify-center border-b border-b-foreground/10 h-16">
                 <div className="w-full max-w-5xl flex justify-between items-center p-3 px-5 text-sm">
                   <div className="flex gap-5 items-center font-semibold">
-                    <Link href={"/"}>Next.js Supabase Starter</Link>
+                    <Link href={"/"}>Stunite - Make friends you actually</Link>
                     <div className="flex items-center gap-2">
                     </div>
                   </div>
@@ -54,14 +54,14 @@ export default function RootLayout({
 
               <footer className="w-full flex items-center justify-center border-t mx-auto text-center text-xs gap-8 py-16">
                 <p>
-                  Powered by{" "}
+                  Built for {" "}
                   <a
-                    href="https://supabase.com/?utm_source=create-next-app&utm_medium=template&utm_term=nextjs"
+                    href="https://www3.cs.stonybrook.edu/~wics/hopperhacks/2025/"
                     target="_blank"
                     className="font-bold hover:underline"
                     rel="noreferrer"
                   >
-                    Supabase
+                    Hopper Hacks
                   </a>
                 </p>
                 <ThemeSwitcher />

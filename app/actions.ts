@@ -46,6 +46,7 @@ export const signUpAction = async (formData: FormData) => {
       "Thanks for signing up! Please check your email for a verification link.",
     );
   }
+  
 };
 
 export const signInAction = async (formData: FormData) => {

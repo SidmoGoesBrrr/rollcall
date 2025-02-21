@@ -12,57 +12,62 @@ export default async function AuthButton() {
     data: { user },
   } = await supabase.auth.getUser();
 
+  // If environment variables are not set, show a warning
   if (!hasEnvVars) {
     return (
-      <>
-        <div className="flex gap-4 items-center">
-          <div>
-            <Badge
-              variant={"default"}
-              className="font-normal pointer-events-none"
-            >
-              Please update .env.local file with anon key and url
-            </Badge>
-          </div>
-          <div className="flex gap-2">
-            <Button
-              asChild
-              size="sm"
-              variant={"outline"}
-              disabled
-              className="opacity-75 cursor-none pointer-events-none"
-            >
-              <Link href="/sign-in">Sign in</Link>
-            </Button>
-            <Button
-              asChild
-              size="sm"
-              variant={"default"}
-              disabled
-              className="opacity-75 cursor-none pointer-events-none"
-            >
-              <Link href="/sign-up">Sign up</Link>
-            </Button>
-          </div>
+      <div className="flex flex-col md:flex-row items-center gap-4 p-4 text-sm">
+        <Badge
+          variant="default"
+          className="font-normal pointer-events-none text-center"
+        >
+          Please update .env.local file with anon key and url
+        </Badge>
+        <div className="flex flex-col sm:flex-row gap-2">
+          <Button
+            asChild
+            size="sm"
+            variant="outline"
+            disabled
+            className="opacity-75 cursor-not-allowed pointer-events-none"
+          >
+            <Link href="/sign-in">Sign in</Link>
+          </Button>
+          <Button
+            asChild
+            size="sm"
+            variant="default"
+            disabled
+            className="opacity-75 cursor-not-allowed pointer-events-none"
+          >
+            <Link href="/sign-up">Sign up</Link>
+          </Button>
         </div>
-      </>
+      </div>
     );
   }
-  return user ? (
-    <div className="flex items-center gap-4">
-      Hey, {user.email}!
-      <form action={signOutAction}>
-        <Button type="submit" variant={"outline"}>
-          Sign out
-        </Button>
-      </form>
-    </div>
-  ) : (
-    <div className="flex gap-2">
-      <Button asChild size="sm" variant={"outline"}>
+
+  // User is signed in
+  if (user) {
+    return (
+      <div className="flex flex-col sm:flex-row items-center gap-4 p-4 text-sm">
+        {/* Remove user.email and just say "Hey!" or any other greeting */}
+        <span className="text-center">Hey!</span>
+        <form action={signOutAction}>
+          <Button type="submit" variant="outline" size="sm">
+            Sign out
+          </Button>
+        </form>
+      </div>
+    );
+  }
+
+  // User is signed out
+  return (
+    <div className="flex flex-col sm:flex-row items-center gap-2 p-4 text-sm">
+      <Button asChild size="sm" variant="outline">
         <Link href="/sign-in">Sign in</Link>
       </Button>
-      <Button asChild size="sm" variant={"default"}>
+      <Button asChild size="sm" variant="default">
         <Link href="/sign-up">Sign up</Link>
       </Button>
     </div>
