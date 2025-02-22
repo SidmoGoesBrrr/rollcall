@@ -3,18 +3,20 @@
 import { Button } from "@/components/ui/button";
 import { createClient } from "@/utils/supabase/client";
 import { Database, TablesInsert } from '@/database.types';
+import { setCookie } from 'cookies-next';
 
 const supabase = createClient()
 
 export default function OnboardingPage() {
 
   async function handleButtonClick() {
+    const unique_id_uid = crypto.randomUUID()
     try {
       // Check if a user with username 'akeen' already exists
       const { data: users, error: selectError } = await supabase
         .from('users')
         .select('*')
-        .eq('username', 'akeen');
+        .eq('username', 'siddhant');
 
       if (selectError) {
         console.error("Error checking user:", selectError);
@@ -28,8 +30,8 @@ export default function OnboardingPage() {
     
       // Prepare a dummy user with random data
       const dummyUser: TablesInsert<'users'> = {
-        unique_id : crypto.randomUUID(),
-        username: 'akeen',
+        unique_id : unique_id_uid,
+        username: 'siddhant',
         email: 'akeen@example.com',
         age: Math.floor(Math.random() * 100),
         clubs: [],
@@ -49,6 +51,8 @@ export default function OnboardingPage() {
         .insert(dummyUser)
         .select();
 
+        setCookie('usernameID', unique_id_uid, { maxAge: 60 * 60 * 24 * 7 }); // Expires in 7 days
+        
       if (insertError) {
         console.error("Error inserting user:", insertError);
       } else {

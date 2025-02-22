@@ -1,6 +1,8 @@
 import * as React from 'react';
 import { notFound } from 'next/navigation';
 import { createClient } from '@supabase/supabase-js';
+import { cookies } from 'next/headers';
+import { c } from 'framer-motion/dist/types.d-6pKw1mTI';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
@@ -21,10 +23,13 @@ interface Profile {
 async function fetchProfile(profileId: string): Promise<Profile | null> {
   console.log('Fetching profile for:', profileId);
 
+
+  const usernameID = (await cookies()).get('usernameID')?.value;
+  console.log("usernameID:", usernameID);
   // Query Supabase for user details
   const { data, error } = await supabase
     .from('users')
-    .select('username, gender, year_of_study, age, major, questions, clubs, residency, origin')
+    .select('unique_id, username, gender, year_of_study, age, major, questions, clubs, residency, origin')
     .eq('username', profileId)
     .single();
 
@@ -32,7 +37,7 @@ async function fetchProfile(profileId: string): Promise<Profile | null> {
     console.error('Error fetching profile:', error.message);
     return null;
   }
-
+  console.log(usernameID === data?.unique_id);
   return data;
 }
 
