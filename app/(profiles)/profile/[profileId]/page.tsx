@@ -28,13 +28,6 @@ interface Profile {
 async function fetchProfile(profileId: string): Promise<Profile | null> {
   console.log('Fetching profile for:', profileId);
 
-  const cookiesStore = cookies(); // ✅ FIX: No need for await
-  const loggedInUserID = (await cookiesStore).get('usernameID')?.value;
-  console.log("Logged in User ID from cookies:", loggedInUserID);
-
-
-  const usernameID = (await cookies()).get('usernameID')?.value;
-  console.log("usernameID:", usernameID);
   // Query Supabase for user details
   const { data, error } = await supabase
     .from('users')
@@ -46,7 +39,7 @@ async function fetchProfile(profileId: string): Promise<Profile | null> {
     console.error('Error fetching profile:', error.message);
     return null;
   }
-  console.log(usernameID === data?.unique_id);
+  console.log(profileId === data?.unique_id);
   return data;
 }
 
@@ -57,7 +50,7 @@ export default async function ProfilePage({
 }) {
   const { profileId } = await params;
   console.log(`Viewing profile of: ${profileId}`);
-
+  
   // ✅ Get logged-in user ID from cookies (DO NOT AWAIT)
   const cookiesStore = cookies();
   const loggedInUserID = (await cookiesStore).get('usernameID')?.value;
