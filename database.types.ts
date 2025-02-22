@@ -37,46 +37,46 @@ export type Database = {
       users: {
         Row: {
           age: number | null
-          Clubs: string[] | null
+          clubs: string[] | null
           created_at: string
           email: string | null
           gender: string | null
-          id: number
           likers: string[] | null
           major: string | null
           origin: string | null
           questions: string[] | null
           residency: string | null
+          unique_id: string
           username: string
           year_of_study: string | null
         }
         Insert: {
           age?: number | null
-          Clubs?: string[] | null
+          clubs?: string[] | null
           created_at?: string
           email?: string | null
           gender?: string | null
-          id?: number
           likers?: string[] | null
           major?: string | null
           origin?: string | null
           questions?: string[] | null
           residency?: string | null
+          unique_id: string
           username: string
           year_of_study?: string | null
         }
         Update: {
           age?: number | null
-          Clubs?: string[] | null
+          clubs?: string[] | null
           created_at?: string
           email?: string | null
           gender?: string | null
-          id?: number
           likers?: string[] | null
           major?: string | null
           origin?: string | null
           questions?: string[] | null
           residency?: string | null
+          unique_id?: string
           username?: string
           year_of_study?: string | null
         }

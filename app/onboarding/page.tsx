@@ -25,13 +25,14 @@ export default function OnboardingPage() {
         console.log("User 'akeen' already exists:", users);
         return;
       }
-
+    
       // Prepare a dummy user with random data
       const dummyUser: TablesInsert<'users'> = {
+        unique_id : crypto.randomUUID(),
         username: 'akeen',
         email: 'akeen@example.com',
         age: Math.floor(Math.random() * 100),
-        Clubs: [],
+        clubs: [],
         created_at: new Date().toISOString(),
         gender: 'unknown',
         likers: [],

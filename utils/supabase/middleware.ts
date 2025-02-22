@@ -40,9 +40,19 @@ export const updateSession = async (request: NextRequest) => {
     const user = await supabase.auth.getUser();
 
     // protected routes
-    if (request.nextUrl.pathname.startsWith("/protected") && user.error) {
+    if (
+      (request.nextUrl.pathname.startsWith("/protected") ||
+       request.nextUrl.pathname.startsWith("/profile")) &&
+      user.error
+    ) {
       return NextResponse.redirect(new URL("/sign-in", request.url));
     }
+    const usernameCookie = request.cookies.get("username");
+    if (request.nextUrl.pathname.startsWith("/onboarding") && usernameCookie) {
+      return NextResponse.redirect(new URL("/", request.url)); // or another main page URL
+    }
+        
+    
 
     if (request.nextUrl.pathname === "/" && !user.error) {
       return NextResponse.redirect(new URL("/onboarding", request.url));
