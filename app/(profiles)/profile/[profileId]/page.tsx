@@ -3,7 +3,7 @@ import { notFound } from 'next/navigation';
 import { createClient } from '@supabase/supabase-js';
 import { cookies } from 'next/headers';
 import Link from 'next/link';
-
+import { Pencil } from 'lucide-react';
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 const supabase = createClient(supabaseUrl, supabaseAnonKey);
@@ -87,9 +87,9 @@ export default async function ProfilePage({
       {isOwnProfile && (
         <Link
           href={`/profile/edit/${profileId}`}
-          className="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg shadow-lg mt-4"
+          className="bg-grey-500 hover:bg-white-600 text-white font-semibold py-2 px-4 rounded-lg shadow-lg mt-4"
         >
-          Edit Profile
+           <Pencil />
         </Link>
       )}
     </div>
