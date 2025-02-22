@@ -49,6 +49,8 @@ export type Database = {
           unique_id: string
           username: string
           year_of_study: string | null
+          onboarding_complete?: boolean | false
+
         }
         Insert: {
           age?: number | null
@@ -64,6 +66,8 @@ export type Database = {
           unique_id: string
           username: string
           year_of_study?: string | null
+          onboarding_complete?: boolean | false
+
         }
         Update: {
           age?: number | null
@@ -79,6 +83,7 @@ export type Database = {
           unique_id?: string
           username?: string
           year_of_study?: string | null
+          onboarding_complete?: boolean | false
         }
         Relationships: []
       }

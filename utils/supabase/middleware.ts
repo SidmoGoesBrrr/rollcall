@@ -1,72 +1,89 @@
+// utils/supabase/middleware.ts
 import { createServerClient } from "@supabase/ssr";
 import { type NextRequest, NextResponse } from "next/server";
 
 export const updateSession = async (request: NextRequest) => {
-  // This `try/catch` block is only here for the interactive tutorial.
-  // Feel free to remove once you have Supabase connected.
   try {
-    // Create an unmodified response
-    let response = NextResponse.next({
-      request: {
-        headers: request.headers,
-      },
-    });
+    // Start with a default response that carries over request headers
+    let response = NextResponse.next({ request: { headers: request.headers } });
+    const pathname = request.nextUrl.pathname;
 
+    // Create a Supabase server client
     const supabase = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
       {
         cookies: {
-          getAll() {
-            return request.cookies.getAll();
-          },
+          getAll: () => request.cookies.getAll(),
           setAll(cookiesToSet) {
             cookiesToSet.forEach(({ name, value }) =>
-              request.cookies.set(name, value),
+              request.cookies.set(name, value)
             );
-            response = NextResponse.next({
-              request,
-            });
+            response = NextResponse.next({ request });
             cookiesToSet.forEach(({ name, value, options }) =>
-              response.cookies.set(name, value, options),
+              response.cookies.set(name, value, options)
             );
           },
         },
-      },
+      }
     );
 
-    // This will refresh session if expired - required for Server Components
-    // https://supabase.com/docs/guides/auth/server-side/nextjs
-    const user = await supabase.auth.getUser();
+    // Retrieve the current auth user
+    const { data: { user } } = await supabase.auth.getUser();
 
-    // protected routes
-    if (
-      (request.nextUrl.pathname.startsWith("/protected") ||
-       request.nextUrl.pathname.startsWith("/profile")) &&
-      user.error
-    ) {
+    // --- CASE 1: Not logged in (new user) ---
+    if (!user) {
+      // Allow only: "/", "/sign-in", and "/sign-up"
+      if (
+        pathname !== "/" &&
+        pathname !== "/sign-in" &&
+        pathname !== "/sign-up"
+      ) {
+        return NextResponse.redirect(new URL("/", request.url));
+      }
+      return response;
+    }
+
+    // --- CASE 2 & 3: Logged in user ---
+    // Retrieve the username/unique ID from cookies
+    const usernameID = request.cookies.get("usernameID")?.value;
+    if (!usernameID) {
+      // If missing the identifier, redirect to sign in (or handle as needed)
       return NextResponse.redirect(new URL("/sign-in", request.url));
     }
-    const usernameCookie = request.cookies.get("username");
-    if (request.nextUrl.pathname.startsWith("/onboarding") && usernameCookie) {
-      return NextResponse.redirect(new URL("/", request.url)); // or another main page URL
-    }
-        
-    
 
-    if (request.nextUrl.pathname === "/" && !user.error) {
-      return NextResponse.redirect(new URL("/onboarding", request.url));
+    // Query the database for the user's onboarding status
+    const { data, error: dbError } = await supabase
+      .from("users")
+      .select("onboarding_complete")
+      .eq("unique_id", usernameID)
+      .single();
+
+    // Assume that if there's an error or no data, onboarding is incomplete
+    const onboardingComplete = data?.onboarding_complete;
+
+    // --- CASE 2: Logged in, but onboarding is NOT complete ---
+    if (!onboardingComplete) {
+      // Only allow access to "/onboarding"
+      if (pathname !== "/onboarding") {
+        return NextResponse.redirect(new URL("/onboarding", request.url));
+      }
+      return response;
     }
 
+    // --- CASE 3: Logged in and onboarding IS complete ---
+    // If the user is trying to access the auth pages or onboarding, redirect them to "/"
+    if (
+      pathname === "/sign-in" ||
+      pathname === "/sign-up" ||
+      pathname === "/onboarding"
+    ) {
+      return NextResponse.redirect(new URL("/", request.url));
+    }
+    // Otherwise, allow the request (including routes like "/" and "/profile/*")
     return response;
   } catch (e) {
-    // If you are here, a Supabase client could not be created!
-    // This is likely because you have not set up environment variables.
-    // Check out http://localhost:3000 for Next Steps.
-    return NextResponse.next({
-      request: {
-        headers: request.headers,
-      },
-    });
+    // In case of any errors (for example, missing env vars), let the request proceed.
+    return NextResponse.next({ request: { headers: request.headers } });
   }
 };

@@ -3,15 +3,17 @@ import { hasEnvVars } from "@/utils/supabase/check-env-vars";
 import Link from "next/link";
 import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
-import { createClient } from "@/utils/supabase/server";
-
+import { createClient as createClientFromClient } from "@/utils/supabase/client";
+import { createClient as createClientFromServer } from "@/utils/supabase/server";
+import { CircleUser } from "lucide-react";
+import {cookies} from "next/headers";
 export default async function AuthButton() {
-  const supabase = await createClient();
-
+  const supabase_client = await createClientFromClient();
+  const supabase_server = await createClientFromServer();
   const {
     data: { user },
-  } = await supabase.auth.getUser();
-
+  } = await supabase_server.auth.getUser();
+  
   // If environment variables are not set, show a warning
   if (!hasEnvVars) {
     return (
@@ -45,22 +47,28 @@ export default async function AuthButton() {
       </div>
     );
   }
-
-  // User is signed in
-  if (user) {
+ if (user) {
+    // Retrieve usernameID from cookies
+    const usernameID = (await cookies()).get("usernameID")?.value;
+    const { data, error } = await supabase_client
+    .from('users')
+    .select('unique_id, username')
+    .eq('unique_id', usernameID)
+    .single();
+    if (error) {
+      console.error('Error fetching profile:', error.message);
+      return null;
+    }
+    const username = data?.username;
     return (
       <div className="flex flex-col sm:flex-row items-center gap-4 p-4 text-sm">
-        {/* Remove user.email and just say "Hey!" or any other greeting */}
-        <span className="text-center">Hey!</span>
-        <form action={signOutAction}>
-          <Button type="submit" variant="outline" size="sm">
-            Sign out
-          </Button>
-        </form>
+        {/* Profile icon that links to the user's profile page */}
+        <Link href={`/profile/${username}`}>
+          <CircleUser size={24} className="cursor-pointer" />
+        </Link>
       </div>
     );
   }
-
   // User is signed out
   return (
     <div className="flex flex-col sm:flex-row items-center gap-2 p-4 text-sm">

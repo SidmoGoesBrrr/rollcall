@@ -1,12 +1,14 @@
 import * as React from 'react';
 import { notFound } from 'next/navigation';
-import { createClient } from '@supabase/supabase-js';
+import { createClient } from '@/utils/supabase/client';
 import { cookies } from 'next/headers';
 import Link from 'next/link';
 import { Pencil } from 'lucide-react';
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-const supabase = createClient(supabaseUrl, supabaseAnonKey);
+import { Button } from '@/components/ui/button';
+import { signOutAction } from '@/app/actions';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+
+const supabase = createClient();
 
 interface Profile {
   unique_id: string;
@@ -19,6 +21,8 @@ interface Profile {
   clubs: string[];
   residency: string;
   origin: string;
+  likers: string[]; // assuming this is an array of liker usernames or IDs
+
 }
 
 async function fetchProfile(profileId: string): Promise<Profile | null> {
@@ -34,7 +38,7 @@ async function fetchProfile(profileId: string): Promise<Profile | null> {
   // Query Supabase for user details
   const { data, error } = await supabase
     .from('users')
-    .select('unique_id, username, gender, year_of_study, age, major, questions, clubs, residency, origin')
+    .select('unique_id, username, gender, year_of_study, age, major, questions, clubs, residency, origin,likers')
     .eq('username', profileId)
     .single();
 
@@ -68,30 +72,99 @@ export default async function ProfilePage({
   console.log(`Is own profile? ${isOwnProfile}`);
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen p-6 bg-transparent text-white">
-      {/* Profile Image */}
-      <img
-        src={'/default-profile.png'}
-        alt={`${profile.username}'s Profile`}
-        className="w-60 h-60 rounded-lg object-cover shadow-lg"
-      />
+    <div className="flex flex-col md:flex-row items-start justify-center min-h-screen p-6 bg-transparent text-white">
+      {/* Left Column: Profile Image and Basic Info */}
+      <div className="md:w-1/3 flex flex-col items-center">
+        <img
+          src="/default-profile.png"
+          alt={`${profile.username}'s Profile`}
+          className="w-60 h-60 rounded-lg object-cover shadow-lg"
+        />
 
-      {/* Info Box */}
-      <div className="bg-gray-800 p-4 rounded-lg shadow-lg text-center mt-4 w-80">
-        <h1 className="text-2xl font-bold">{profile.username}</h1>
-        <p className="text-gray-300 mt-2">{profile.age} | {profile.gender} | {profile.year_of_study}</p>
-        <p className="text-gray-300">{profile.major}</p>
+        <div className="bg-gray-800 p-4 rounded-lg shadow-lg text-center mt-4 w-full">
+          <h1 className="text-2xl font-bold">{profile.username}</h1>
+          <p className="text-gray-300 mt-2">
+            {profile.age} | {profile.gender} | {profile.year_of_study}
+          </p>
+          <p className="text-gray-300">{profile.major}</p>
+        </div>
+
+        {isOwnProfile && (
+          <div className="mt-4 flex flex-col items-center">
+            <Link
+              href={`/profile/edit/${profileId}`}
+              className="bg-gray-500 hover:bg-gray-600 text-white font-semibold py-2 px-4 rounded-lg shadow-lg inline-flex items-center"
+            >
+              <Pencil className="mr-2" /> Edit Profile
+            </Link>
+            <form action={signOutAction} className="mt-2">
+              <Button type="submit" variant="outline" size="sm">
+                Sign Out
+              </Button>
+            </form>
+          </div>
+        )}
       </div>
 
-      {/* ✅ Show Edit Button ONLY if the user is on their own profile */}
-      {isOwnProfile && (
-        <Link
-          href={`/profile/edit/${profileId}`}
-          className="bg-grey-500 hover:bg-white-600 text-white font-semibold py-2 px-4 rounded-lg shadow-lg mt-4"
-        >
-           <Pencil />
-        </Link>
-      )}
+      {/* Right Column: Tabs for Profile Details and Likes */}
+      <div className="md:w-2/3 mt-6 md:mt-0 md:ml-6">
+        <Tabs defaultValue="profile">
+          <TabsList className="flex space-x-4 border-b border-gray-700">
+            <TabsTrigger value="profile">Profile</TabsTrigger>
+            {loggedInUserID && <TabsTrigger value="likes">Likes</TabsTrigger>}
+          </TabsList>
+
+          {/* Tab: Profile Details */}
+          <TabsContent value="profile">
+            <div className="p-4">
+              <p>
+                <strong>Username:</strong> {profile.username}
+              </p>
+              <p>
+                <strong>Age:</strong> {profile.age}
+              </p>
+              <p>
+                <strong>Gender:</strong> {profile.gender}
+              </p>
+              <p>
+                <strong>Year of Study:</strong> {profile.year_of_study}
+              </p>
+              <p>
+                <strong>Major:</strong> {profile.major}
+              </p>
+              <p>
+                <strong>Residency:</strong> {profile.residency}
+              </p>
+              <p>
+                <strong>Origin:</strong> {profile.origin}
+              </p>
+              <p>
+                <strong>Clubs:</strong> {profile.clubs.join(", ")}
+              </p>
+              <p>
+                <strong>Questions:</strong> {profile.questions.join(", ")}
+              </p>
+            </div>
+          </TabsContent>
+
+          {/* Tab: Likes (only visible if logged in) */}
+          {loggedInUserID && (
+            <TabsContent value="likes">
+              <div className="p-4">
+                {profile.likers && profile.likers.length > 0 ? (
+                  <ul className="list-disc pl-5">
+                    {profile.likers.map((liker: any, index: number) => (
+                      <li key={index}>{liker}</li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p>No likes yet.</p>
+                )}
+              </div>
+            </TabsContent>
+          )}
+        </Tabs>
+      </div>
     </div>
   );
 }
