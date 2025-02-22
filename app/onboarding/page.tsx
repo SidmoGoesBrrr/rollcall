@@ -16,7 +16,7 @@ export default function OnboardingPage() {
       const { data: users, error: selectError } = await supabase
         .from('users')
         .select('*')
-        .eq('username', 'siddhant');
+        .eq('username', 'chimichanga');
 
       if (selectError) {
         console.error("Error checking user:", selectError);
@@ -31,7 +31,7 @@ export default function OnboardingPage() {
       // Prepare a dummy user with random data
       const dummyUser: TablesInsert<'users'> = {
         unique_id : unique_id_uid,
-        username: 'siddhant',
+        username: 'chimichanga',
         email: 'akeen@example.com',
         age: Math.floor(Math.random() * 100),
         clubs: [],
