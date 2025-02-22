@@ -2,7 +2,6 @@ import * as React from 'react';
 import { notFound } from 'next/navigation';
 import { createClient } from '@supabase/supabase-js';
 import { cookies } from 'next/headers';
-import { c } from 'framer-motion/dist/types.d-6pKw1mTI';
 import Link from 'next/link';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
