@@ -8,6 +8,11 @@ import { getCookie, setCookie } from "cookies-next";
 const supabase = createClient();
 
 export default function OnboardingPage() {
+  //reload the page to get the cookie
+  useEffect(() => {
+    window.location.reload();
+  }
+  , []);
   // State for each field of the onboarding form
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");

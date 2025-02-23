@@ -138,7 +138,7 @@ export default async function ProfilePage({
                 <strong>Questions:</strong> {profile.questions?.join(", ") || "No questions answered"}
               </p>
             </div>
-          </TabsContent>`
+          </TabsContent>
 
 
 
