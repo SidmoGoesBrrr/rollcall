@@ -7,7 +7,30 @@ import {
   HoverCardContent,
   HoverCardTrigger,
 } from "@/components/ui/hover-card";
+import Cookies from "js-cookie";
 import { createClient } from "@/utils/supabase/client";
+
+const supabase = createClient();
+
+export async function getUsernameFromUniqueID(uniqueID: string): Promise<string | null> {
+  const { data, error } = await supabase
+    .from("users")
+    .select("username")
+    .eq("unique_id", uniqueID)
+    .single();
+
+  if (error || !data) {
+    console.error("Error fetching username for unique_id:", uniqueID, error);
+    return null;
+  }
+  return data.username;
+}
+
+
+export function getLoggedInUserID(): string | undefined {
+  const loggedInUserID = Cookies.get("usernameID");
+  return loggedInUserID;
+}
 
 interface Profile {
   username: string;
@@ -25,6 +48,7 @@ export default function Hero() {
   const [liked, setLiked] = useState<Record<number, boolean>>({});
   const supabase = createClient();
 
+
   useEffect(() => {
     async function fetchProfiles() {
       const { data, error } = await supabase
@@ -40,20 +64,78 @@ export default function Hero() {
     fetchProfiles();
   }, [supabase]);
 
-  const handleLike = (
+  // Function to update the likers array in Supabase
+  async function updateLikers(
+    likedProfileUsername: string,
+    likerUsername: string,
+    remove: boolean
+  ) {
+    // Fetch the current likers array for the liked profile
+    const { data, error } = await supabase
+      .from("users")
+      .select("likers")
+      .eq("username", likedProfileUsername)
+      .single();
+  
+    if (error) {
+      console.error("Error fetching likers:", error);
+      return;
+    }
+  
+    // Ensure we have an array (default to empty)
+    let currentLikers: string[] = data.likers || [];
+  
+    if (remove) {
+      // Remove the liker from the array when unliking
+      currentLikers = currentLikers.filter((liker) => liker !== likerUsername);
+    } else {
+      // Add the liker if not already present when liking
+      if (!currentLikers.includes(likerUsername)) {
+        currentLikers.push(likerUsername);
+      }
+    }
+  
+    // Update the user's record with the new likers array
+    const { error: updateError } = await supabase
+      .from("users")
+      .update({ likers: currentLikers })
+      .eq("username", likedProfileUsername);
+  
+    if (updateError) {
+      console.error("Error updating likers:", updateError);
+    }
+  }
+
+
+  const handleLike = async (
     index: number,
     event: React.MouseEvent<HTMLButtonElement>
   ) => {
+    const likerUsername = getLoggedInUserID();
+    if (!likerUsername) {
+      console.error("User is not logged in");
+      return;
+    }
+
+    // Capture the target immediately
+    const target = event.currentTarget;
+    if (!target) {
+      console.error("event.currentTarget is null");
+      return;
+    }
+    
+    // Compute the bounding rect synchronously
+    const rect = target.getBoundingClientRect();
+    const x = (rect.left + rect.width / 2) / window.innerWidth;
+    const y = (rect.top + rect.height / 2) / window.innerHeight;
+    
+    const newLikeState = !liked[index];
     setLiked((prev) => ({
       ...prev,
-      [index]: !prev[index],
+      [index]: newLikeState,
     }));
-
-    if (!liked[index]) {
-      const rect = event.currentTarget.getBoundingClientRect();
-      const x = (rect.left + rect.width / 2) / window.innerWidth;
-      const y = (rect.top + rect.height / 2) / window.innerHeight;
-
+  
+    if (newLikeState) {
       confetti({
         particleCount: 150,
         spread: 360,
@@ -62,6 +144,20 @@ export default function Hero() {
         scalar: 1.2,
         origin: { x, y },
       });
+      const loggedInUserID = getLoggedInUserID();
+      if (!loggedInUserID) {
+        console.error("User is not logged in");
+        return;
+      }
+      const likerUsername = await getUsernameFromUniqueID(loggedInUserID);
+      if (likerUsername) {
+        await updateLikers(profiles[index].username, likerUsername, false);
+      }
+    } else {
+      // handle unlike: remove current user from the likers array
+      if (likerUsername) {
+        await updateLikers(profiles[index].username, likerUsername, true);
+      }
     }
   };
 
