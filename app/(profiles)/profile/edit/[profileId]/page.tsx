@@ -2,6 +2,9 @@ import { notFound } from "next/navigation";
 import { cookies } from "next/headers";
 import EditProfileForm from "@/components/edit-page"; // ✅ Import Edit Profile Form
 import { createClient } from "@/utils/supabase/client";
+export const metadata = {
+  title: "Edit Profile",
+};
 
 const supabase = createClient();
 
@@ -40,5 +43,12 @@ export default async function EditProfilePage({ params }: { readonly params: Pro
   }
 
   console.log("✅ User is allowed to edit this profile");
-  return <EditProfileForm profile={profile} profileId={profileId} />;
+  return (
+    // 1️⃣ Wrap your form in a container with a subtle background
+    <main className="w-[900px] p-6">
+      <EditProfileForm profile={profile} profileId={profileId} />
+      
+    </main>
+    
+  );
 }

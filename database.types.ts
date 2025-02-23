@@ -36,59 +36,58 @@ export type Database = {
     Tables: {
       users: {
         Row: {
-          age: number | null
+          age: number
+          avatar_link: string
           clubs: string[] | null
           created_at: string
           email: string | null
-          gender: string | null
+          gender: string
           likers: string[] | null
-          major: string | null
+          major: string
+          onboarding_complete: boolean
           origin: string | null
-          questions: string[] | null
+          questions: Json
           residency: string | null
+          social_media: string | null
           unique_id: string
           username: string
           year_of_study: string | null
-          onboarding_complete?: boolean | false
-          avatar_link?: string | null
-
         }
         Insert: {
-          age?: number | null
+          age: number
+          avatar_link?: string
           clubs?: string[] | null
           created_at?: string
           email?: string | null
-          gender?: string | null
+          gender: string
           likers?: string[] | null
-          major?: string | null
+          major?: string
+          onboarding_complete?: boolean
           origin?: string | null
-          questions?: string[] | null
+          questions?: Json
           residency?: string | null
+          social_media?: string | null
           unique_id: string
           username: string
           year_of_study?: string | null
-          onboarding_complete?: boolean | false
-          avatar_link?: string | null
-
-
         }
         Update: {
-          age?: number | null
+          age?: number
+          avatar_link?: string
           clubs?: string[] | null
           created_at?: string
           email?: string | null
-          gender?: string | null
+          gender?: string
           likers?: string[] | null
-          major?: string | null
+          major?: string
+          onboarding_complete?: boolean
           origin?: string | null
-          questions?: string[] | null
+          questions?: Json
           residency?: string | null
+          social_media?: string | null
           unique_id?: string
           username?: string
           year_of_study?: string | null
-          onboarding_complete?: boolean | false
-          avatar_link?: string | null
-
         }
         Relationships: []
       }
