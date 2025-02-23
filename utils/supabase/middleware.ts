@@ -47,10 +47,7 @@ export const updateSession = async (request: NextRequest) => {
     // --- CASE 2 & 3: Logged in user ---
     // Retrieve the username/unique ID from cookies
     const usernameID = request.cookies.get("usernameID")?.value;
-    if (!usernameID) {
-      // If missing the identifier, redirect to sign in (or handle as needed)
-      return NextResponse.redirect(new URL("/sign-in", request.url));
-    }
+    
 
     // Query the database for the user's onboarding status
     const { data, error: dbError } = await supabase

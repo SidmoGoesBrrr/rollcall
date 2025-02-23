@@ -50,7 +50,7 @@ export default async function ProfilePage({
 }) {
   const { profileId } = await params;
   console.log(`Viewing profile of: ${profileId}`);
-  
+
   // ✅ Get logged-in user ID from cookies (DO NOT AWAIT)
   const cookiesStore = cookies();
   const loggedInUserID = (await cookiesStore).get('usernameID')?.value;
@@ -132,13 +132,15 @@ export default async function ProfilePage({
                 <strong>Origin:</strong> {profile.origin}
               </p>
               <p>
-                <strong>Clubs:</strong> {profile.clubs.join(", ")}
+                <strong>Clubs:</strong> {profile.clubs ? profile.clubs.join(", ") : "None"}
               </p>
               <p>
-                <strong>Questions:</strong> {profile.questions.join(", ")}
+                <strong>Questions:</strong> {profile.questions ? profile.questions.join(", ") : "None"}
               </p>
             </div>
-          </TabsContent>
+          </TabsContent>`
+
+
 
           {/* Tab: Likes (only visible if logged in) */}
           {loggedInUserID && (

@@ -2,8 +2,12 @@
 
 import { encodedRedirect } from "@/utils/utils";
 import { createClient } from "@/utils/supabase/server";
+import { createClient as createClientClient } from "@/utils/supabase/client";
 import { headers , cookies} from "next/headers";
 import { redirect } from "next/navigation";
+import { NextResponse } from "next/server";
+import { setCookie } from "cookies-next";
+
 
 export const signUpAction = async (formData: FormData) => {
   const email = formData.get("email")?.toString();
@@ -39,31 +43,70 @@ export const signUpAction = async (formData: FormData) => {
   if (error) {
     console.error(error.code + " " + error.message);
     return encodedRedirect("error", "/sign-up", error.message);
-  } else {
+  } else {const unique_id = crypto.randomUUID();
+    // Insert a new user record into the 'users' table with initial defaults
+    const { error: insertError } = await supabase
+      .from("users")
+      .insert({
+        username : unique_id,
+        unique_id,
+        email,
+        onboarding_complete: false,
+        // Add any other default fields here as needed
+      });
+
+    if (insertError) {
+      console.error("Error inserting user record: ", insertError.message);
+      return encodedRedirect("error", "/sign-up", insertError.message);
+    }
+
     return encodedRedirect(
       "success",
       "/sign-up",
-      "Thanks for signing up! Please check your email for a verification link.",
+      "Thanks for signing up! Please check your email for a verification link."
     );
   }
-  
 };
+
+
 
 export const signInAction = async (formData: FormData) => {
   const email = formData.get("email") as string;
   const password = formData.get("password") as string;
   const supabase = await createClient();
+  const supabaseClient = await createClientClient();
+  const origin = (await headers()).get("origin")!;
 
+  // Sign in the user
   const { error } = await supabase.auth.signInWithPassword({
     email,
     password,
   });
-
   if (error) {
     return encodedRedirect("error", "/sign-in", error.message);
   }
+  console.log(email);
 
-  return redirect("/onboarding");
+  // Fetch the user's profile (using .single() so we get an object)
+  const { data: userProfile, error: profileError } = await supabaseClient
+    .from("users")
+    .select("unique_id")
+    .eq("email", email)
+    .single();
+
+  if (profileError) {
+    console.error("Error fetching profile:", profileError.message);
+    return encodedRedirect("error", "/sign-in", profileError.message);
+  }
+  console.log("User profile", userProfile);
+
+  if (userProfile?.unique_id) {
+    // Instead of creating and returning a NextResponse instance,
+    // call redirect() which performs the redirection server-side.
+    redirect("/onboarding");
+  }
+
+  return encodedRedirect("error", "/sign-in", "User profile not found.");
 };
 
 export const forgotPasswordAction = async (formData: FormData) => {
