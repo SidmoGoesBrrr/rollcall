@@ -1,13 +1,15 @@
-// File path: app/(auth-pages)/sign-in/page.tsx
+"use client";
 import { signInAction } from "@/app/actions";
-import { FormMessage, Message } from "@/components/form-message";
 import { SubmitButton } from "@/components/submit-button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 
-export default async function Login(props: { searchParams: Promise<Message> }) {
-  const searchParams = await props.searchParams;
+export default function Login() {
+  const searchParams = useSearchParams();
+  const errorMessage = searchParams.get("error");
+
   return (
     <div className="w-full max-w-sm mx-auto pt-32 px-4">
       <form className="flex flex-col">
@@ -18,15 +20,12 @@ export default async function Login(props: { searchParams: Promise<Message> }) {
             Sign up
           </Link>
         </p>
-        <div className="flex flex-col gap-2 [&>input]:mb-3 mt-8">
+        <div className="flex flex-col gap-2 mt-8">
           <Label htmlFor="email">Email</Label>
           <Input name="email" placeholder="you@example.com" required />
           <div className="flex justify-between items-center">
             <Label htmlFor="password">Password</Label>
-            <Link
-              className="text-xs text-foreground underline"
-              href="/forgot-password"
-            >
+            <Link className="text-xs text-foreground underline" href="/forgot-password">
               Forgot Password?
             </Link>
           </div>
@@ -34,17 +33,22 @@ export default async function Login(props: { searchParams: Promise<Message> }) {
             type="password"
             name="password"
             placeholder="Your password"
+            minLength={8}
             required
           />
-          <SubmitButton pendingText="Signing In..." formAction={signInAction}>
+          <SubmitButton formAction={signInAction} pendingText="Signing In...">
             Sign in
           </SubmitButton>
         </div>
       </form>
       <div className="mt-12 pt-6">
-        <FormMessage message={searchParams} />
+        {errorMessage && (
+          <div
+            className="p-4 rounded bg-red-100 border border-red-400 text-red-700"
+            dangerouslySetInnerHTML={{ __html: errorMessage }}
+          />
+        )}
       </div>
     </div>
   );
 }
-
