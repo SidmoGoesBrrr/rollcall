@@ -15,7 +15,7 @@ interface EditProfileProps {
     major: string;
     residency: string;
     origin: string;
-    avatar_url: string | null;
+    avatar_link: string | null;
   };
   profileId: string;
 }
@@ -36,30 +36,50 @@ export default function EditProfileForm({ profile, profileId }: Readonly<EditPro
     }));
   }
 
+  async function updateAvatarLinkInSupabase(profileId: string, avatarLink: string) {
+    const { error } = await supabase
+      .from('users')
+      .update({ avatar_link: avatarLink })
+      .eq('username', profileId);
+  
+    if (error) {
+      console.error('Error updating avatar URL in Supabase:', error.message);
+    }
+  }
+
   async function handleAvatarUpload(event: React.FormEvent) {
     event.preventDefault();
-
+  
     if (!inputFileRef.current?.files) {
       throw new Error("No file selected");
     }
-
+  
     const file = inputFileRef.current.files[0];
+  
 
-    const response = await fetch(
-      `/api/avatar/upload?filename=${file.name}`,
-      {
-        method: 'POST',
-        body: file,
-      },
-    );
-
-    const newBlob = (await response.json()) as PutBlobResult;
+    const response = await fetch(`/api/avatar/upload?filename=${file.name}`, {
+      method: 'POST',
+      body: file,
+    });
+  
+    if (!response.ok) {
+      console.error('Failed to upload file', response.status, response.statusText);
+      throw new Error('Failed to upload avatar');
+    }
+  
+    const newBlob = await response.json();
     setBlob(newBlob);
-
+  
+    // Assuming the newBlob contains a property 'url' with the uploaded file URL
+    const avatarLink = newBlob.url;
+  
+    // Update the avatar URL in Supabase
+    await updateAvatarLinkInSupabase(profileId, avatarLink);
+  
     // Optionally, you can store this URL in the profile's avatar URL field
     setUpdatedProfile((prev) => ({
       ...prev,
-      avatar_url: newBlob.url,
+      avatar_link: avatarLink, // Update the avatar URL in state as well
     }));
   }
 
@@ -77,7 +97,7 @@ export default function EditProfileForm({ profile, profileId }: Readonly<EditPro
         major: updatedProfile.major,
         residency: updatedProfile.residency,
         origin: updatedProfile.origin,
-        avatar_url: updatedProfile.avatar_url, // Save the avatar URL in the database
+        avatar_link: updatedProfile.avatar_link, // Save the avatar URL in the database
       })
       .eq("username", profileId);
 
@@ -175,7 +195,7 @@ export default function EditProfileForm({ profile, profileId }: Readonly<EditPro
 
         {blob && (
           <div>
-            Avatar URL: <a href={blob.url}>{blob.url}</a>
+            Image uploaded successfully! <img src={blob.url} alt="Uploaded Avatar" />
           </div>
         )}
 

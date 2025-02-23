@@ -50,6 +50,7 @@ export type Database = {
           username: string
           year_of_study: string | null
           onboarding_complete?: boolean | false
+          avatar_link?: string | null
 
         }
         Insert: {
@@ -67,6 +68,8 @@ export type Database = {
           username: string
           year_of_study?: string | null
           onboarding_complete?: boolean | false
+          avatar_link?: string | null
+
 
         }
         Update: {
@@ -84,6 +87,8 @@ export type Database = {
           username?: string
           year_of_study?: string | null
           onboarding_complete?: boolean | false
+          avatar_link?: string | null
+
         }
         Relationships: []
       }
