@@ -4,6 +4,8 @@ import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { createClient } from "@/utils/supabase/client";
 import { getCookie, setCookie } from "cookies-next";
+import { get } from "http";
+import { useRouter } from "next/navigation"; // ✅ Correct import for Next.js App Router
 
 const supabase = createClient();
 
@@ -53,6 +55,7 @@ const steps: Step[] = [
 ];
 
 export default function OnboardingForm() {
+  const router = useRouter(); // ✅ Moved useRouter() to the top-level
   const [currentStep, setCurrentStep] = useState<number>(0);
   const [formData, setFormData] = useState<FormData>({
     username: "",
@@ -151,12 +154,45 @@ export default function OnboardingForm() {
   }
 
   // Check for the cookie on component mount.
-  useEffect(() => {
-    const cookieValue = getCookie("usernameID");
+
+useEffect(() => {
+  const checkUser = async () => {
+    // Check for the cookie on component mount.
+    let cookieValue = getCookie("usernameID");
     if (!cookieValue) {
-      fetchAndSetCookie();
+      await fetchAndSetCookie();
     }
-  }, []);
+    
+    // Retrieve the cookie again in case it was set
+    const uid = getCookie("usernameID");
+    if (!uid) {
+      console.error("User ID cookie is not set.");
+      return;
+    }
+    
+    // Make sure to await the asynchronous Supabase call
+    const { data, error } = await supabase
+      .from("users")
+      .select("onboarding_complete")
+      .eq("unique_id", uid)
+      .maybeSingle();
+
+    if (error) {
+      console.error("Error fetching user:", error);
+      return;
+    }
+    if (data?.onboarding_complete) {
+      console.log("User has already completed onboarding");
+      router.push("/");
+      return;
+    }
+
+    // Additional logic for when onboarding is not complete can be added here.
+  };
+
+  checkUser();
+}, []);
+
 
 
 

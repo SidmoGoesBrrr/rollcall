@@ -65,7 +65,7 @@ export default async function ProfilePage({
   console.log(`Is own profile? ${isOwnProfile}`);
 
   return (
-    <div className="flex flex-col md:flex-row items-start justify-center min-h-screen p-6 bg-transparent text-white">
+    <div className="flex flex-col md:flex-row items-start justify-center min-h-screen p-6 bg-transparent text-text pt-24">
       {/* Left Column: Profile Image and Basic Info */}
       <div className="md:w-1/3 flex flex-col items-start justify-center">
         <img
@@ -74,12 +74,12 @@ export default async function ProfilePage({
           className="w-60 h-60 rounded-lg object-cover shadow-lg"
         />
 
-        <div className="bg-gray-800 p-4 rounded-lg shadow-lg text-center mt-4 w-full">
-          <h1 className="text-2xl font-bold">{profile.username}</h1>
-          <p className="text-gray-300 mt-2">
+        <div className="bg-gray-600 p-4 rounded-lg shadow-lg text-center mt-4 w-full">
+          <h1 className="text-2xl text-[#d9a14e] font-bold">{profile.username}</h1>
+          <p className="text-xl text-[#cba162] font-semibold mt-2">
             {profile.age} | {profile.gender} | {profile.year_of_study}
           </p>
-          <p className="text-gray-300">{profile.major}</p>
+          <p className="text-[#e5c99d] font-semibold">{profile.major}</p>
         </div>
 
         {isOwnProfile && (
@@ -100,7 +100,7 @@ export default async function ProfilePage({
       </div>
 
       {/* Right Column: Tabs for Profile Details and Likes */}
-      <div className="md:w-2/3 mt-6 md:mt-0 md:ml-6 w-full max-w-3xl">
+      <div className="md:w-1/3 mt-6 md:mt-0 md:ml-6 w-full max-w-3xl">
         <Tabs defaultValue="profile">
           <TabsList className="flex space-x-4 border-b border-gray-700 w-full justify-start">
             <TabsTrigger value="profile">Profile</TabsTrigger>
@@ -109,7 +109,7 @@ export default async function ProfilePage({
 
           {/* Tab: Profile Details */}
           <TabsContent value="profile">
-            <div className="p-4">
+            <div className="p-4 ">
               <p>
                 <strong>Username:</strong> {profile.username}
               </p>
@@ -142,10 +142,10 @@ export default async function ProfilePage({
                 {Array.isArray(profile.questions)
                   ? profile.questions.join(", ")
                   : typeof profile.questions === "object" && profile.questions !== null
-                  ? Object.entries(profile.questions)
+                    ? Object.entries(profile.questions)
                       .map(([question, answer]) => `${question}: ${answer}`)
                       .join(" | ")
-                  : profile.questions || "No questions answered"}
+                    : profile.questions || "No questions answered"}
               </p>
             </div>
           </TabsContent>
@@ -155,17 +155,23 @@ export default async function ProfilePage({
             <TabsContent value="likes" className="flex-grow overflow-auto max-h-90">
               <div className="p-4 w-[650px]">
                 {profile.likers && profile.likers.length > 0 ? (
-                  <ul className="list-disc pl-5">
+                  <ul className="space-y-3">
                     {profile.likers.map((liker: any, index: number) => (
-                      <li key={index}>{liker}</li>
+                      <li key={index} className="flex items-center bg-orange-200 p-3 rounded-lg shadow-sm">
+                        <div className="w-10 h-10 text-text rounded-full bg-orange-300 flex items-center justify-center text-black font-bold">
+                          {liker.charAt(0).toUpperCase()}
+                        </div>
+                        <span className="ml-3 text-lg font-medium text-orange-600">{liker}</span>
+                      </li>
                     ))}
                   </ul>
                 ) : (
-                  <p>No likes yet.</p>
+                  <p className="text-gray-400">No likes yet.</p>
                 )}
               </div>
             </TabsContent>
           )}
+
         </Tabs>
       </div>
     </div>
