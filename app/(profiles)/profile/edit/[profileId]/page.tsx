@@ -5,12 +5,12 @@ import { createClient } from "@/utils/supabase/client";
 
 const supabase = createClient();
 
-export default async function EditProfilePage({ params }: { readonly params: { readonly profileId: string } }) {
-  const { profileId } = params;
+export default async function EditProfilePage({ params }: { readonly params: Promise<{ readonly profileId: string }> }) {
+  const { profileId } = await params;
 
   // ✅ Get the logged-in user ID from cookies
-  const cookiesStore = cookies();
-  const loggedInUserID = (await cookiesStore).get("usernameID")?.value;
+  const cookiesStore = await cookies();
+  const loggedInUserID = cookiesStore.get("usernameID")?.value;
   console.log("🚀 Logged In User ID:", loggedInUserID);
   console.log("👀 Editing Profile ID:", profileId);
 
