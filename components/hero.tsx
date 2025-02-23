@@ -1,11 +1,21 @@
 "use client";
+import { ReactNode } from "react";
 import { motion } from "framer-motion";
 import Link from "next/link";
 
+type ChildrenProps = {
+  children: ReactNode;
+};
+
+type HighlightProps = {
+  children: ReactNode;
+  className?: string;
+};
+
 // Dummy implementations for demonstration.
 // Replace these with your actual components if available.
-const HeroHighlight = ({ children }) => <div>{children}</div>;
-const Highlight = ({ children, className }) => (
+const HeroHighlight = ({ children }: ChildrenProps) => <div>{children}</div>;
+const Highlight = ({ children, className }: HighlightProps) => (
   <span className={className}>{children}</span>
 );
 
