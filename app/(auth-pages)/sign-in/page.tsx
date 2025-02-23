@@ -36,7 +36,7 @@ export default async function Login(props: { searchParams: Promise<Message> }) {
             required
           />
           <SubmitButton pendingText="Signing In..." formAction={signInAction}>
-            Sign ind
+            Sign in
           </SubmitButton>
         </div>
       </form>

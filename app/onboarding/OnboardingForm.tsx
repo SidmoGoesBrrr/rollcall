@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { createClient } from "@/utils/supabase/client";
-import { getCookie } from "cookies-next";
+import { getCookie, setCookie } from "cookies-next";
 
 const supabase = createClient();
 
@@ -118,6 +118,47 @@ export default function OnboardingForm() {
       setCurrentStep((prev) => prev - 1);
     }
   };
+
+  async function fetchAndSetCookie() {
+    // Fetch the logged-in user via Supabase auth
+    const { data, error } = await supabase.auth.getUser();
+    if (error) {
+      console.error("Error fetching user:", error);
+      return;
+    }
+    // Check if the user's email exists
+    if (data?.user?.email) {
+      // Query the "users" table for the record matching the user's email
+      const { data: userData, error: userError } = await supabase
+        .from("users")
+        .select("unique_id")
+        .eq("email", data.user.email)
+        .maybeSingle();
+      if (userError) {
+        console.error("Error fetching user profile:", userError);
+        return;
+      }
+      if (userData?.unique_id) {
+        // Set the cookie with the user's unique_id from the users table
+        setCookie("usernameID", userData.unique_id, { maxAge: 60 * 60 * 24 * 7, path: "/" });
+        console.log("usernameID cookie set to:", userData.unique_id);
+      } else {
+        console.error("No user profile found for email:", data.user.email);
+      }
+    } else {
+      console.error("No logged in user found.");
+    }
+  }
+
+  // Check for the cookie on component mount.
+  useEffect(() => {
+    const cookieValue = getCookie("usernameID");
+    if (!cookieValue) {
+      fetchAndSetCookie();
+    }
+  }, []);
+
+
 
   async function handleSubmit() {
     const userId = getCookie("usernameID") as string;
