@@ -68,7 +68,7 @@ function QuestionCard({ question, answer }: { question: string; answer: string; 
       <HoverCardTrigger asChild>
         <button
           onClick={() => setOpen((prev) => !prev)}
-          className="bg-blue-500 text-white py-2 px-4 rounded-lg hover:bg-blue-700"
+          className="bg-[#84888c] text-slate-900 py-2 px-4 rounded-lg hover:bg-[#6b7e91]"
         >
           {question}
         </button>
@@ -222,8 +222,8 @@ export default function Hero() {
 
   return (
     <div
-      className="snap-y snap-mandatory overflow-y-auto h-screen w-full hide-scrollbar"
-      style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+    className="snap-y snap-mandatory overflow-y-auto h-screen w-full hide-scrollbar pb-12 pt-1"
+    style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
     >
       {profiles.length === 0 ? (
         <p>No profiles found.</p>
@@ -235,7 +235,7 @@ export default function Hero() {
               key={profile.username}
               className="snap-start flex-shrink-0 h-screen w-full flex items-center justify-center"
             >
-              <div className="w-[438px] h-[750px] rounded-3xl shadow-xl p-5 flex flex-col bg-white">
+              <div className="w-[438px] h-[750px] rounded-3xl shadow-md p-5 flex flex-col bg-bg shadow-black">
                 <a
                   href={profileUrl}
                   className="h-[438px] w-full bg-gray-100 rounded-lg overflow-hidden block"
@@ -250,7 +250,7 @@ export default function Hero() {
                   />
                 </a>
 
-                <div className="mt-5 w-full bg-gray-500 p-5 rounded-lg text-center text-white relative">
+                <div className="mt-5 w-full bg-[#d1c3bb] p-5 rounded-lg text-center text-zinc-600 relative">
                   <button
                     className={`absolute top-5 right-5 p-3 rounded-full transition-all duration-300 transform ${
                       liked[index]
