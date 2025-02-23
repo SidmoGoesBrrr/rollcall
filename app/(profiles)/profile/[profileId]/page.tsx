@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { Pencil } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { signOutAction } from '@/app/actions';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 const supabase = createClient();
 
@@ -17,11 +17,11 @@ interface Profile {
   year_of_study: string;
   age: number;
   major: string;
-  questions: string[];
-  clubs: string[];
+  questions: string[] | Record<string, any> | string;
+  clubs: string[] | string;
   residency: string;
   origin: string;
-  likers: string[]; // assuming this is an array of liker usernames or IDs
+  likers: string[];
   avatar_link: string;
 }
 
@@ -31,7 +31,7 @@ async function fetchProfile(profileId: string): Promise<Profile | null> {
   // Query Supabase for user details
   const { data, error } = await supabase
     .from('users')
-    .select('unique_id, username, gender, year_of_study, age, major, questions, clubs, residency, origin,likers,avatar_link')
+    .select('unique_id, username, gender, year_of_study, age, major, questions, clubs, residency, origin, likers, avatar_link')
     .eq('username', profileId)
     .single();
 
@@ -46,14 +46,14 @@ async function fetchProfile(profileId: string): Promise<Profile | null> {
 export default async function ProfilePage({
   params,
 }: {
-  readonly params: Promise<{ profileId: string }>
+  readonly params: Promise<{ profileId: string }>;
 }) {
   const { profileId } = await params;
   console.log(`Viewing profile of: ${profileId}`);
 
   // ✅ Get logged-in user ID from cookies (DO NOT AWAIT)
-  const cookiesStore = cookies();
-  const loggedInUserID = (await cookiesStore).get('usernameID')?.value;
+  const cookiesStore = await cookies();
+  const loggedInUserID = cookiesStore.get('usernameID')?.value;
   console.log(`Logged in User ID from cookies: ${loggedInUserID}`);
 
   // ✅ Fetch Profile Data (AWAIT fetchProfile)
@@ -69,7 +69,7 @@ export default async function ProfilePage({
       {/* Left Column: Profile Image and Basic Info */}
       <div className="md:w-1/3 flex flex-col items-start justify-center">
         <img
-          src={profile.avatar_link} // ✅ Use the avatar_link from the profile
+          src={profile.avatar_link}
           alt={`${profile.username}'s Profile`}
           className="w-60 h-60 rounded-lg object-cover shadow-lg"
         />
@@ -132,15 +132,23 @@ export default async function ProfilePage({
                 <strong>Origin:</strong> {profile.origin}
               </p>
               <p>
-                <strong>Clubs:</strong> {profile.clubs?.join(", ") || "No clubs listed"}
+                <strong>Clubs:</strong>{" "}
+                {Array.isArray(profile.clubs)
+                  ? profile.clubs.join(", ")
+                  : profile.clubs || "No clubs listed"}
               </p>
               <p>
-                <strong>Questions:</strong> {profile.questions?.join(", ") || "No questions answered"}
+                <strong>Questions:</strong>{" "}
+                {Array.isArray(profile.questions)
+                  ? profile.questions.join(", ")
+                  : typeof profile.questions === "object" && profile.questions !== null
+                  ? Object.entries(profile.questions)
+                      .map(([question, answer]) => `${question}: ${answer}`)
+                      .join(" | ")
+                  : profile.questions || "No questions answered"}
               </p>
             </div>
           </TabsContent>
-
-
 
           {/* Tab: Likes (only visible if logged in) */}
           {loggedInUserID && (
