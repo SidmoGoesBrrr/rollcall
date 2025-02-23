@@ -32,7 +32,7 @@ async function fetchProfile(profileId: string): Promise<Profile | null> {
   const { data, error } = await supabase
     .from('users')
     .select('unique_id, username, gender, year_of_study, age, major, questions, clubs, residency, origin, likers, avatar_link')
-    .eq('username', profileId)
+    .ilike('username', profileId)
     .single();
 
   if (error) {
@@ -153,7 +153,7 @@ export default async function ProfilePage({
           {/* Tab: Likes (only visible if logged in) */}
           {loggedInUserID && (
             <TabsContent value="likes" className="flex-grow overflow-auto max-h-90">
-              <div className="p-4 w-[293px]">
+              <div className="p-4 w-[650px]">
                 {profile.likers && profile.likers.length > 0 ? (
                   <ul className="list-disc pl-5">
                     {profile.likers.map((liker: any, index: number) => (
