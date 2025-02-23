@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-
+import Cookies from "js-cookie";
 /**
  * Redirects to a specified path with an encoded message as a query parameter.
  * @param {('error' | 'success')} type - The type of message, either 'error' or 'success'.
@@ -13,4 +13,9 @@ export function encodedRedirect(
   message: string,
 ) {
   return redirect(`${path}?${type}=${encodeURIComponent(message)}`);
+}
+
+export function getLoggedInUserID(): string | undefined {
+  const loggedInUserID = Cookies.get("usernameID");
+  return loggedInUserID;
 }
