@@ -1,3 +1,4 @@
+// File path: components/env-var-warning.tsx
 import Link from "next/link";
 import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";

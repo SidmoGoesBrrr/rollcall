@@ -1,3 +1,4 @@
+// File path: app/onboarding/OnboardingForm.tsx
 "use client";
 
 import React, { useState, useEffect, KeyboardEvent } from "react";

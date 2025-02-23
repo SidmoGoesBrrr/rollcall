@@ -1,3 +1,4 @@
+// File path: components/scrollpage.tsx
 "use client";
 import { useState, useEffect } from "react";
 import { ThumbsUp } from "lucide-react";

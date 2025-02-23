@@ -1,3 +1,4 @@
+// File path: app/not-found.tsx
 // app/not-found.tsx
 export default function NotFound() {
     return (

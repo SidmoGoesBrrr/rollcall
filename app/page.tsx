@@ -1,3 +1,4 @@
+// File path: app/page.tsx
 import Hero from "@/components/hero";
 import ScrollPage from "@/components/scrollpage";
 import { createClient } from '@/utils/supabase/client';

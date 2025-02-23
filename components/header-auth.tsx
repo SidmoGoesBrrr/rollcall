@@ -1,3 +1,4 @@
+// File path: components/header-auth.tsx
 "use client";
 
 import { useEffect, useState } from "react";

@@ -1,3 +1,4 @@
+// File path: components/next-logo.tsx
 export default function NextLogo() {
   return (
     <svg

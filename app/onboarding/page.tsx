@@ -1,3 +1,4 @@
+// File path: app/onboarding/page.tsx
 "use client";
 import { useEffect, useState } from "react";
 import OnboardingForm from "./OnboardingForm";

@@ -1,3 +1,4 @@
+// File path: app/api/sendMail/route.ts
 import { NextResponse } from "next/server";
 import axios from "axios";
 

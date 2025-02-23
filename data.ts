@@ -1,3 +1,4 @@
+// File path: data.ts
 //data.ts
   
 export const popularMajors = [

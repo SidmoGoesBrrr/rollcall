@@ -1,3 +1,4 @@
+// File path: app/(auth-pages)/layout.tsx
 export default async function Layout({
   children,
 }: {

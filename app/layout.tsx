@@ -1,3 +1,4 @@
+// File path: app/layout.tsx
 import HeaderAuth from "@/components/header-auth";
 import { EnvVarWarning } from "@/components/env-var-warning";
 import { Geist } from "next/font/google";

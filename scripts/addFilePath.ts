@@ -1,11 +1,13 @@
-import fs from 'fs';
-import path from 'path';
+// File path: scripts/addFilePath.ts
+import * as fs from 'fs';
+import * as path from 'path';
 
 /**
  * Recursively traverse a directory and process all .ts and .tsx files.
  * @param dir - The directory to traverse.
+ * @param projectRoot - The root directory to compute relative paths.
  */
-function traverseDir(dir: string) {
+function traverseDir(dir: string, projectRoot: string) {
   const files = fs.readdirSync(dir);
 
   for (const file of files) {
@@ -13,37 +15,44 @@ function traverseDir(dir: string) {
     const stat = fs.statSync(fullPath);
 
     if (stat.isDirectory()) {
-      traverseDir(fullPath);
+      traverseDir(fullPath, projectRoot);
     } else if (
       stat.isFile() &&
       (fullPath.endsWith('.ts') || fullPath.endsWith('.tsx'))
     ) {
-      processFile(fullPath);
+      processFile(fullPath, projectRoot);
     }
   }
 }
 
 /**
- * Reads a file, checks if it already starts with the file path comment,
- * and if not, prepends the comment.
+ * Reads a file, checks if it already starts with a file path comment,
+ * and either replaces that comment or prepends a new one with the file path relative to the project root.
  * @param filePath - The full path of the file to process.
+ * @param projectRoot - The root directory to compute the relative path.
  */
-function processFile(filePath: string) {
+function processFile(filePath: string, projectRoot: string) {
   const fileContent = fs.readFileSync(filePath, 'utf8');
-  // Define the file path comment. You can change the format as needed.
-  const filePathComment = `// File path: ${filePath}`;
+  const relativePath = path.relative(projectRoot, filePath);
+  const newComment = `// File path: ${relativePath}`;
 
-  // Check if the file already starts with the file path comment.
-  if (fileContent.startsWith(filePathComment)) {
-    return;
+  // Split file content into lines
+  const lines = fileContent.split('\n');
+
+  // Check if the first line is a file path comment (e.g., starts with '// File path:')
+  if (lines[0].startsWith('// File path:')) {
+    // Replace the first line with the new comment
+    lines[0] = newComment;
+  } else {
+    // Otherwise, add the new comment as the first line
+    lines.unshift(newComment);
   }
 
-  // Prepend the file path comment and write back to the file.
-  const newContent = `${filePathComment}\n${fileContent}`;
+  const newContent = lines.join('\n');
   fs.writeFileSync(filePath, newContent, 'utf8');
-  console.log(`Updated: ${filePath}`);
+  console.log(`Updated: ${relativePath}`);
 }
 
-// Define the root directory. This example uses the current working directory.
+// Define the root directory. Typically, this is your project root.
 const projectRoot = process.cwd();
-traverseDir(projectRoot);
+traverseDir(projectRoot, projectRoot);

@@ -1,3 +1,4 @@
+// File path: components/ui/tabs.tsx
 "use client"
 
 import * as TabsPrimitive from "@radix-ui/react-tabs"

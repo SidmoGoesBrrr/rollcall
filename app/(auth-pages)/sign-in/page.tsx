@@ -1,3 +1,4 @@
+// File path: app/(auth-pages)/sign-in/page.tsx
 import { signInAction } from "@/app/actions";
 import { FormMessage, Message } from "@/components/form-message";
 import { SubmitButton } from "@/components/submit-button";

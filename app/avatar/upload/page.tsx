@@ -1,3 +1,4 @@
+// File path: app/avatar/upload/page.tsx
 'use client';
 
 import type { PutBlobResult } from '@vercel/blob';

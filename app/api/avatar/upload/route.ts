@@ -1,3 +1,4 @@
+// File path: app/api/avatar/upload/route.ts
 import { put } from '@vercel/blob';
 import { NextResponse } from 'next/server';
 

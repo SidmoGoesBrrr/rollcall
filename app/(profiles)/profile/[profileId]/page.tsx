@@ -1,3 +1,4 @@
+// File path: app/(profiles)/profile/[profileId]/page.tsx
 import * as React from 'react';
 import { notFound } from 'next/navigation';
 import { createClient } from '@/utils/supabase/client';

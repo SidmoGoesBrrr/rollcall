@@ -1,3 +1,4 @@
+// File path: utils/supabase/check-env-vars.ts
 // This check can be removed
 // it is just for tutorial purposes
 

@@ -1,3 +1,4 @@
+// File path: utils/supabase/middleware.ts
 // utils/supabase/middleware.ts
 import { createServerClient } from "@supabase/ssr";
 import { type NextRequest, NextResponse } from "next/server";

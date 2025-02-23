@@ -1,3 +1,4 @@
+// File path: app/(profiles)/layout.tsx
 export default async function Layout({
     children,
   }: {

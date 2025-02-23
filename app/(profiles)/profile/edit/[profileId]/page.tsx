@@ -1,3 +1,4 @@
+// File path: app/(profiles)/profile/edit/[profileId]/page.tsx
 import { notFound } from "next/navigation";
 import { cookies } from "next/headers";
 import EditProfileForm from "@/components/edit-page"; // ✅ Import Edit Profile Form

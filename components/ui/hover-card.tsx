@@ -1,3 +1,4 @@
+// File path: components/ui/hover-card.tsx
 "use client"
 
 import * as HoverCardPrimitive from "@radix-ui/react-hover-card"
