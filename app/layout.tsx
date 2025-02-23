@@ -27,7 +27,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className="bg-white text-black">
+      <body className="bg-bg text-text">
         {/* Fixed Header */}
         <header className="fixed top-0 left-0 w-full z-50 bg-white border-b shadow-sm">
           <nav className="h-14 sm:h-16 px-4 sm:px-6 md:px-8 flex items-center justify-between max-w-screen-lg mx-auto">
