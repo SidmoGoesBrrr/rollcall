@@ -22,7 +22,7 @@ interface Profile {
   residency: string;
   origin: string;
   likers: string[]; // assuming this is an array of liker usernames or IDs
-
+  avatar_link: string;
 }
 
 async function fetchProfile(profileId: string): Promise<Profile | null> {
@@ -31,7 +31,7 @@ async function fetchProfile(profileId: string): Promise<Profile | null> {
   // Query Supabase for user details
   const { data, error } = await supabase
     .from('users')
-    .select('unique_id, username, gender, year_of_study, age, major, questions, clubs, residency, origin,likers')
+    .select('unique_id, username, gender, year_of_study, age, major, questions, clubs, residency, origin,likers,avatar_link')
     .eq('username', profileId)
     .single();
 
@@ -67,9 +67,9 @@ export default async function ProfilePage({
   return (
     <div className="flex flex-col md:flex-row items-start justify-center min-h-screen p-6 bg-transparent text-white">
       {/* Left Column: Profile Image and Basic Info */}
-      <div className="md:w-1/3 flex flex-col items-center">
+      <div className="md:w-1/3 flex flex-col items-start justify-center">
         <img
-          src="/default-profile.png"
+          src={profile.avatar_link} // ✅ Use the avatar_link from the profile
           alt={`${profile.username}'s Profile`}
           className="w-60 h-60 rounded-lg object-cover shadow-lg"
         />
@@ -100,9 +100,9 @@ export default async function ProfilePage({
       </div>
 
       {/* Right Column: Tabs for Profile Details and Likes */}
-      <div className="md:w-2/3 mt-6 md:mt-0 md:ml-6">
+      <div className="md:w-2/3 mt-6 md:mt-0 md:ml-6 w-full max-w-3xl">
         <Tabs defaultValue="profile">
-          <TabsList className="flex space-x-4 border-b border-gray-700">
+          <TabsList className="flex space-x-4 border-b border-gray-700 w-full justify-start">
             <TabsTrigger value="profile">Profile</TabsTrigger>
             {loggedInUserID && <TabsTrigger value="likes">Likes</TabsTrigger>}
           </TabsList>
@@ -132,10 +132,10 @@ export default async function ProfilePage({
                 <strong>Origin:</strong> {profile.origin}
               </p>
               <p>
-                <strong>Clubs:</strong> {profile.clubs ? profile.clubs.join(", ") : "None"}
+                <strong>Clubs:</strong> {profile.clubs?.join(", ") || "No clubs listed"}
               </p>
               <p>
-                <strong>Questions:</strong> {profile.questions ? profile.questions.join(", ") : "None"}
+                <strong>Questions:</strong> {profile.questions?.join(", ") || "No questions answered"}
               </p>
             </div>
           </TabsContent>`
@@ -144,8 +144,8 @@ export default async function ProfilePage({
 
           {/* Tab: Likes (only visible if logged in) */}
           {loggedInUserID && (
-            <TabsContent value="likes">
-              <div className="p-4">
+            <TabsContent value="likes" className="flex-grow overflow-auto max-h-90">
+              <div className="p-4 w-[293px]">
                 {profile.likers && profile.likers.length > 0 ? (
                   <ul className="list-disc pl-5">
                     {profile.likers.map((liker: any, index: number) => (
