@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { createClient } from "@/utils/supabase/client";
 import { getCookie, setCookie } from "cookies-next";
 import { get } from "http";
-import { useRouter } from "next/router";
+import { useRouter } from "next/navigation"; // ✅ Correct import for Next.js App Router
 
 const supabase = createClient();
 
@@ -55,6 +55,7 @@ const steps: Step[] = [
 ];
 
 export default function OnboardingForm() {
+  const router = useRouter(); // ✅ Moved useRouter() to the top-level
   const [currentStep, setCurrentStep] = useState<number>(0);
   const [formData, setFormData] = useState<FormData>({
     username: "",
@@ -99,7 +100,7 @@ export default function OnboardingForm() {
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [currentQuestion]);
-  
+
   const handleNext = () => {
     // For select questions, update the answer using the selected option.
     if (currentQuestion.type === "select" && selectedOption !== null) {
@@ -182,7 +183,7 @@ useEffect(() => {
     }
     if (data?.onboarding_complete) {
       console.log("User has already completed onboarding");
-      
+      router.push("/");
       return;
     }
 

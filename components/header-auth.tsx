@@ -1,62 +1,62 @@
-// components/header-auth.tsx
+"use client"; // ✅ Convert to a Client Component
+
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
 import { createClient } from "@/utils/supabase/client";
 import { CircleUser } from "lucide-react";
-import { cookies } from "next/headers";
-import { hasEnvVars } from "@/utils/supabase/check-env-vars";
+import { getCookie } from "cookies-next"; // ✅ Fetch cookies on the client
 
-export default async function AuthButton() {
-  const supabase_client = await createClient();
+export default function AuthButton() {
+  const supabase = createClient();
+  const [user, setUser] = useState<{ unique_id: string; username: string } | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  // Show an error message if env vars are not set.
-  if (!hasEnvVars) {
-    return (
-      <div className="flex flex-col md:flex-row items-center gap-4 p-4 text-sm">
-        <Badge variant="default" className="font-normal pointer-events-none text-center">
-          Please update .env.local file with anon key and url
-        </Badge>
-        <div className="flex flex-col sm:flex-row gap-2">
-          <Button asChild size="sm" variant="outline" disabled className="opacity-75 cursor-not-allowed pointer-events-none">
-            <Link href="/sign-in">Sign in</Link>
-          </Button>
-          <Button asChild size="sm" variant="default" disabled className="opacity-75 cursor-not-allowed pointer-events-none">
-            <Link href="/sign-up">Sign up</Link>
-          </Button>
-        </div>
-      </div>
-    );
+  useEffect(() => {
+    const fetchUser = async () => {
+      setLoading(true);
+      const usernameID = getCookie("usernameID");
+
+      if (!usernameID) {
+        setUser(null);
+        setLoading(false);
+        return;
+      }
+
+      const { data, error } = await supabase
+        .from("users")
+        .select("unique_id, username")
+        .eq("unique_id", usernameID)
+        .single();
+
+      if (error || !data) {
+        console.error("Error fetching user profile:", error?.message || "No user found");
+        setUser(null);
+      } else {
+        setUser(data);
+      }
+
+      setLoading(false);
+    };
+
+    fetchUser();
+
+    // ✅ Listen for login/logout events
+    const { data: authListener } = supabase.auth.onAuthStateChange(() => {
+      fetchUser(); // Re-fetch user data on auth change
+    });
+
+    return () => {
+      authListener.subscription.unsubscribe();
+    };
+  }, []);
+
+  if (loading) {
+    return <p>Loading...</p>;
   }
 
-  // Check for the "usernameID" cookie.
-  const cookieStore = await cookies();
-  const usernameID = cookieStore.get("usernameID")?.value;
-  console.log(`Cookie usernameID: ${usernameID}`);
-
-  // If the cookie does not exist, render the sign in/sign up buttons.
-  if (!usernameID) {
-    return (
-      <div className="flex flex-col sm:flex-row items-center gap-2 p-4 text-sm">
-        <Button asChild size="sm" variant="outline">
-          <Link href="/sign-in">Sign in</Link>
-        </Button>
-        <Button asChild size="sm" variant="default">
-          <Link href="/sign-up">Sign up</Link>
-        </Button>
-      </div>
-    );
-  }
-
-  // If the cookie exists, query for the user's profile.
-  const { data, error } = await supabase_client
-    .from('users')
-    .select('unique_id, username')
-    .eq('unique_id', usernameID)
-    .single();
-
-  if (error || !data) {
-    console.error("Error fetching profile:", error ? error.message : "No user profile found");
+  if (!user) {
     return (
       <div className="flex flex-col sm:flex-row items-center gap-2 p-4 text-sm">
         <Button asChild size="sm" variant="outline">
@@ -69,10 +69,9 @@ export default async function AuthButton() {
     );
   }
 
-  const username = data.username;
   return (
     <div className="flex flex-col sm:flex-row items-center gap-4 p-4 text-sm">
-      <Link href={`/profile/${username}`}>
+      <Link href={`/profile/${user.username}`}>
         <CircleUser size={24} className="cursor-pointer" />
       </Link>
     </div>

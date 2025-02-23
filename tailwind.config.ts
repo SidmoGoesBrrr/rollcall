@@ -1,50 +1,39 @@
-import type { Config } from "tailwindcss";
+import type { Config } from 'tailwindcss';
 
-const config = {
-    darkMode: ["class"],
-    content: [
-    "./pages/**/*.{ts,tsx}",
-    "./components/**/*.{ts,tsx}",
-    "./app/**/*.{ts,tsx}",
-    "./src/**/*.{ts,tsx}",
+const config: Config = {
+  content: [
+    "./pages/**/*.{js,ts,jsx,tsx,mdx}",
+    "./components/**/*.{js,ts,jsx,tsx,mdx}",
+    "./app/**/*.{js,ts,jsx,tsx,mdx}",
   ],
-  prefix: "",
+  darkMode: 'class',
   theme: {
     extend: {
       colors: {
-        main: 'var(--main)',
-        overlay: 'var(--overlay)',
-        bg: 'var(--bg)',
-        bw: 'var(--bw)',
-        blank: 'var(--blank)',
-        text: 'var(--text)',
-        mtext: 'var(--mtext)',
-        border: 'var(--border)',
-        ring: 'var(--ring)',
-        ringOffset: 'var(--ring-offset)',
-        
-        secondaryBlack: '#212121', 
+        main: 'rgb(var(--main))',
+        overlay: 'rgba(var(--overlay))',
+        bg: 'rgb(var(--bg))',
+        bw: 'rgb(var(--bw))',
+        blank: 'rgb(var(--blank))',
+        border: 'rgb(var(--border))',
+        text: 'rgb(var(--text))',
+        mtext: 'rgb(var(--mtext))',
+        ring: 'rgb(var(--ring))',
+        ringOffset: 'rgb(var(--ring-offset))',
       },
       borderRadius: {
-        base: '4px'
+        base: '4px',
       },
       boxShadow: {
-        shadow: 'var(--shadow)'
-      },
-      translate: {
-        boxShadowX: '2px',
-        boxShadowY: '4px',
-        reverseBoxShadowX: '-2px',
-        reverseBoxShadowY: '-4px',
+        shadow: '4px 4px 0px 0px rgba(0, 0, 0, 1)', // Directly using RGBA fallback
       },
       fontWeight: {
         base: '500',
         heading: '800',
       },
     },
-  
   },
-  plugins: [require("tailwindcss-animate")],
-} satisfies Config;
+  plugins: [],
+};
 
 export default config;
