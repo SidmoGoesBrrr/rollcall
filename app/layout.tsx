@@ -2,6 +2,7 @@
 import HeaderAuth from "@/components/header-auth";
 import { EnvVarWarning } from "@/components/env-var-warning";
 import { Geist } from "next/font/google";
+import { Public_Sans } from "next/font/google";
 import Link from "next/link";
 import "./globals.css";
 
@@ -20,6 +21,11 @@ const geistSans = Geist({
   subsets: ["latin"],
 });
 
+const publicSans = Public_Sans({
+  display: "swap",
+  subsets: ["latin"],
+});
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -27,7 +33,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className="bg-bg text-text">
+      <body className={`bg-bg text-text ${geistSans.className} ${publicSans.className}`}>
         {/* Fixed Header */}
         <header className="fixed top-0 left-0 w-full z-50 bg-white border-b shadow-sm">
           <nav className="h-14 sm:h-16 px-4 sm:px-6 md:px-8 flex items-center justify-between max-w-screen-lg mx-auto">
