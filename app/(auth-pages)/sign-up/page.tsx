@@ -11,14 +11,15 @@ export default async function Signup(props: {
   const searchParams = await props.searchParams;
   if ("message" in searchParams) {
     return (
-      <div className="w-full flex-1 flex items-center h-screen sm:max-w-md justify-center gap-2 p-4">
+      <div className="w-full flex-1 flex items-center h-screen sm:max-w-md justify-center gap-2 p-4 pt-32">
+        {/* Added pt-32 to ensure spacing after sign-up */}
         <FormMessage message={searchParams} />
       </div>
     );
   }
 
   return (
-    <>
+    <div className="pt-32"> {/* Added padding to push everything lower */}
       <form className="flex flex-col min-w-64 max-w-64 mx-auto">
         <h1 className="text-2xl font-medium">Sign up</h1>
         <p className="text-sm text text-foreground">
@@ -41,9 +42,11 @@ export default async function Signup(props: {
           <SubmitButton formAction={signUpAction} pendingText="Signing up...">
             Sign up
           </SubmitButton>
-          <FormMessage message={searchParams} />
         </div>
       </form>
-    </>
+      <div className="mt-12 pt-6"> {/* Added spacing for form messages */}
+        <FormMessage message={searchParams} />
+      </div>
+    </div>
   );
 }
