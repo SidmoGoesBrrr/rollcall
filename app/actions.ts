@@ -4,11 +4,10 @@
 import { encodedRedirect } from "@/utils/utils";
 import { createClient } from "@/utils/supabase/server";
 import { createClient as createClientClient } from "@/utils/supabase/client";
-import { headers , cookies} from "next/headers";
+import { headers, cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { NextResponse } from "next/server";
 import { setCookie } from "cookies-next";
-
 
 export const signUpAction = async (formData: FormData) => {
   const email = formData.get("email")?.toString();
@@ -21,7 +20,7 @@ export const signUpAction = async (formData: FormData) => {
     return encodedRedirect(
       "error",
       "/sign-up",
-      "Please use a valid @stonybrook.edu email address.",
+      "Please use a valid @stonybrook.edu email address."
     );
   }
 
@@ -29,7 +28,7 @@ export const signUpAction = async (formData: FormData) => {
     return encodedRedirect(
       "error",
       "/sign-up",
-      "Email and password are required",
+      "Email and password are required"
     );
   }
 
@@ -42,14 +41,20 @@ export const signUpAction = async (formData: FormData) => {
   });
 
   if (error) {
-    console.error(error.code + " " + error.message);
-    return encodedRedirect("error", "/sign-up", error.message);
-  } else {const unique_id = crypto.randomUUID();
+    console.error("Supabase error:", error.message);
+    let customMessage = error.message;
+    if (error.message.toLowerCase().includes("Password")) {
+      customMessage =
+        'Please use a password that is at least 8 characters long and contains at least one letter and one number.';
+    }
+    return encodedRedirect("error", "/sign-up", customMessage);
+  } else {
+    const unique_id = crypto.randomUUID();
     // Insert a new user record into the 'users' table with initial defaults
     const { error: insertError } = await supabase
       .from("users")
       .insert({
-        username : unique_id,
+        username: unique_id,
         unique_id,
         email,
         onboarding_complete: false,
@@ -68,8 +73,6 @@ export const signUpAction = async (formData: FormData) => {
     );
   }
 };
-
-
 
 export const signInAction = async (formData: FormData) => {
   const email = formData.get("email") as string;
@@ -129,7 +132,7 @@ export const forgotPasswordAction = async (formData: FormData) => {
     return encodedRedirect(
       "error",
       "/forgot-password",
-      "Could not reset password",
+      "Could not reset password"
     );
   }
 
@@ -140,7 +143,7 @@ export const forgotPasswordAction = async (formData: FormData) => {
   return encodedRedirect(
     "success",
     "/forgot-password",
-    "Check your email for a link to reset your password.",
+    "Check your email for a link to reset your password."
   );
 };
 
@@ -154,7 +157,7 @@ export const resetPasswordAction = async (formData: FormData) => {
     encodedRedirect(
       "error",
       "/protected/reset-password",
-      "Password and confirm password are required",
+      "Password and confirm password are required"
     );
   }
 
@@ -162,7 +165,7 @@ export const resetPasswordAction = async (formData: FormData) => {
     encodedRedirect(
       "error",
       "/protected/reset-password",
-      "Passwords do not match",
+      "Passwords do not match"
     );
   }
 
@@ -174,7 +177,7 @@ export const resetPasswordAction = async (formData: FormData) => {
     encodedRedirect(
       "error",
       "/protected/reset-password",
-      "Password update failed",
+      "Password update failed"
     );
   }
 
@@ -184,10 +187,8 @@ export const resetPasswordAction = async (formData: FormData) => {
 export const signOutAction = async () => {
   const supabase = await createClient();
   await supabase.auth.signOut();
-  //clear cookies
-  (await
-    //clear cookies
-    cookies()).delete("usernameID");
+  // Clear cookies
+  (await cookies()).delete("usernameID");
 
   return redirect("/sign-in");
 };

@@ -1,22 +1,17 @@
-// File path: app/(auth-pages)/sign-up/page.tsx
+// File: app/(auth-pages)/sign-up/page.tsx
+"use client";
+
 import { signUpAction } from "@/app/actions";
-import { FormMessage, Message } from "@/components/form-message";
 import { SubmitButton } from "@/components/submit-button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 
-export default async function Signup(props: {
-  searchParams: Promise<Message>;
-}) {
-  const searchParams = await props.searchParams;
-  if ("message" in searchParams) {
-    return (
-      <div className="w-full max-w-sm mx-auto flex items-center h-screen p-4 pt-32">
-        <FormMessage message={searchParams} />
-      </div>
-    );
-  }
+export default function Signup() {
+  const searchParams = useSearchParams();
+  // e.g. "Password should contain at least one character of each:\nabcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ\n0123456789."
+  const errorMessage = searchParams.get("error");
 
   return (
     <div className="w-full max-w-sm mx-auto pt-32 px-4">
@@ -28,7 +23,7 @@ export default async function Signup(props: {
             Sign in
           </Link>
         </p>
-        <div className="flex flex-col gap-2 [&>input]:mb-3 mt-8">
+        <div className="flex flex-col gap-2 mt-8">
           <Label htmlFor="email">Email</Label>
           <Input name="email" placeholder="you@example.com" required />
           <Label htmlFor="password">Password</Label>
@@ -36,17 +31,23 @@ export default async function Signup(props: {
             type="password"
             name="password"
             placeholder="Your password"
-            minLength={6}
+            minLength={8}
             required
           />
+         
           <SubmitButton formAction={signUpAction} pendingText="Signing up...">
             Sign up
           </SubmitButton>
         </div>
       </form>
-      <div className="mt-12 pt-6">
-        <FormMessage message={searchParams} />
-      </div>
+
+      {/* Error message rendered below text boxes with background styling and whitespace preservation */}
+      {errorMessage && (
+        <div
+          className="mt-6 p-4 rounded bg-red-100 border border-red-400 text-red-700 whitespace-pre-wrap"
+          dangerouslySetInnerHTML={{ __html: errorMessage }}
+        />
+      )}
     </div>
   );
 }
