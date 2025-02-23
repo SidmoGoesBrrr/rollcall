@@ -1,4 +1,3 @@
-// File path: app/onboarding/OnboardingForm.tsx
 "use client";
 
 import React, { useState, useEffect, KeyboardEvent } from "react";
@@ -20,7 +19,7 @@ import { popularMajors, popularCountries, questionOptions } from "@/data";
 
 const supabase = createClient();
 
-// Extend FormData to include clubs (as an array)
+// Extend FormData to include clubs (social media is handled separately)
 interface FormData {
   username: string;
   age: string;
@@ -30,12 +29,6 @@ interface FormData {
   residency: string;
   year_of_study: string;
   clubs: string[];
-}
-
-// Answered question type.
-interface AnsweredQuestion {
-  question: string;
-  answer: string;
 }
 
 // Step interfaces
@@ -64,9 +57,16 @@ interface CustomQuestionsStep {
   type: "customQuestions";
 }
 
-type Step = InputStep | SelectStep | MultiStep | CustomQuestionsStep;
+interface SocialMediaStep {
+  key: "social_media";
+  label: string;
+  type: "social_media";
+  options: string[];
+}
 
-// Build steps array without preset clubs and with one custom questions step.
+type Step = InputStep | SelectStep | MultiStep | CustomQuestionsStep | SocialMediaStep;
+
+// Updated steps array with new custom questions and social media steps.
 const steps: Step[] = [
   { key: "username", label: "Enter your username", type: "input" },
   { key: "age", label: "Enter your age", type: "input" },
@@ -74,40 +74,39 @@ const steps: Step[] = [
     key: "gender",
     label: "Select your gender",
     type: "select",
-    options: ["Male", "Female", "Other"]
+    options: ["Male", "Female", "Other"],
   },
-  {
-    key: "major",
-    label: "Enter your major",
-    type: "input"
-  },
-  {
-    key: "origin",
-    label: "Enter your country of origin",
-    type: "input"
-  },
+  { key: "major", label: "Enter your major", type: "input" },
+  { key: "origin", label: "Enter your country of origin", type: "input" },
   {
     key: "residency",
     label: "Select your residency",
     type: "select",
-    options: ["On Campus", "Off Campus"]
+    options: ["On Campus", "Off Campus"],
   },
   {
     key: "year_of_study",
     label: "Select your year of study",
     type: "select",
-    options: ["Freshman", "Sophomore", "Junior", "Senior", "Graduate"]
+    options: ["Freshman", "Sophomore", "Junior", "Senior", "Graduate"],
   },
   {
     key: "clubs",
     label: "Enter clubs you're interested in (press Enter to add)",
-    type: "multi"
+    type: "multi",
   },
   {
     key: "customQuestions",
-    label: "Answer Custom Questions",
-    type: "customQuestions"
-  }
+    label: "Select and Answer Custom Questions",
+    type: "customQuestions",
+  },
+  {
+    key: "social_media",
+    label:
+      "If you want to be friends with someone, what social media do you prefer to use?",
+    type: "social_media",
+    options: ["Instagram", "Email"],
+  },
 ];
 
 export default function OnboardingForm() {
@@ -128,10 +127,17 @@ export default function OnboardingForm() {
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [error, setError] = useState<string>("");
 
-  // For custom questions
-  const [answeredQuestions, setAnsweredQuestions] = useState<AnsweredQuestion[]>([]);
-  const [selectedQuestion, setSelectedQuestion] = useState<string>("");
-  const [questionAnswer, setQuestionAnswer] = useState<string>("");
+  // For custom questions (new approach)
+  const [selectedQuestions, setSelectedQuestions] = useState<string[]>([]);
+  const [questionAnswers, setQuestionAnswers] = useState<Record<string, string>>(
+    {}
+  );
+
+  // For social media step (handled separately)
+  const [selectedSocialMediaOption, setSelectedSocialMediaOption] =
+    useState<string>("Email");
+  const [instagramInput, setInstagramInput] = useState<string>("");
+  const [userEmail, setUserEmail] = useState<string>("");
 
   const currentStepData = steps[currentStep];
 
@@ -141,11 +147,12 @@ export default function OnboardingForm() {
     } else {
       setSelectedOption(null);
     }
+    // Reset error and suggestions when step changes.
     setError("");
     setSuggestions([]);
   }, [currentStep, currentStepData.type]);
 
-  // Autocomplete logic for major and origin.
+  // Autocomplete for major and origin.
   useEffect(() => {
     if (currentStepData.key === "major") {
       const value = formData.major;
@@ -216,6 +223,36 @@ export default function OnboardingForm() {
         return false;
       }
     }
+
+    if (currentStepData.type === "customQuestions") {
+      if (selectedQuestions.length < 3) {
+        setError("Please select 3 questions to answer.");
+        return false;
+      }
+      for (const q of selectedQuestions) {
+        const ans = (questionAnswers[q] || "").trim();
+        if (ans.length < 10 || ans.length > 250) {
+          setError(
+            `Answer for "${q}" must be between 10 and 250 characters.`
+          );
+          return false;
+        }
+      }
+    }
+
+    if (currentStepData.type === "social_media") {
+      if (selectedSocialMediaOption === "Instagram") {
+        if (instagramInput.trim().length === 0) {
+          setError("Please enter your Instagram username or link.");
+          return false;
+        }
+      } else if (selectedSocialMediaOption === "Email") {
+        if (userEmail.trim().length === 0) {
+          setError("Email is required.");
+          return false;
+        }
+      }
+    }
     return true;
   }
 
@@ -231,6 +268,8 @@ export default function OnboardingForm() {
     const isValid = await validateStep();
     if (!isValid) return;
 
+    // No need to update formData for social_media here;
+    // we'll determine its value at submission.
     if (currentStep < steps.length - 1) {
       setCurrentStep((prev) => prev + 1);
     } else {
@@ -247,11 +286,10 @@ export default function OnboardingForm() {
   // Clubs multi-select helper: add club on pressing Enter.
   const handleClubsKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter" && clubsInput.trim() !== "") {
-      // Avoid duplicate clubs.
       if (!formData.clubs.includes(clubsInput.trim())) {
         setFormData((prev) => ({
           ...prev,
-          clubs: [...prev.clubs, clubsInput.trim()]
+          clubs: [...prev.clubs, clubsInput.trim()],
         }));
       }
       setClubsInput("");
@@ -261,7 +299,7 @@ export default function OnboardingForm() {
   const removeClub = (club: string) => {
     setFormData((prev) => ({
       ...prev,
-      clubs: prev.clubs.filter((c) => c !== club)
+      clubs: prev.clubs.filter((c) => c !== club),
     }));
   };
 
@@ -272,6 +310,7 @@ export default function OnboardingForm() {
       return;
     }
     if (data?.user?.email) {
+      setUserEmail(data.user.email);
       const { data: userData, error: userError } = await supabase
         .from("users")
         .select("unique_id")
@@ -284,7 +323,7 @@ export default function OnboardingForm() {
       if (userData?.unique_id) {
         setCookie("usernameID", userData.unique_id, {
           maxAge: 60 * 60 * 24 * 7,
-          path: "/"
+          path: "/",
         });
         console.log("usernameID cookie set to:", userData.unique_id);
       } else {
@@ -330,14 +369,20 @@ export default function OnboardingForm() {
       console.error("Cookie 'usernameID' not found");
       return;
     }
-     // Build questionsPayload from the answeredQuestions array.
-     const questionsPayload = answeredQuestions.reduce<Record<string, string>>((acc, curr) => {
-      acc[curr.question] = curr.answer;
-      return acc;
-    }, {});
-    
 
-    // Prepare payload including answered questions.
+    // Determine social media value based on selection:
+    const socialMediaValue =
+      selectedSocialMediaOption === "Instagram"
+        ? (() => {
+            let insta = instagramInput.trim();
+            if (!insta.includes("instagram.com")) {
+              insta = `https://www.instagram.com/${insta}`;
+            }
+            return insta;
+          })()
+        : userEmail;
+
+    // Prepare payload including custom questions.
     const payload = {
       username: formData.username,
       age: Number(formData.age),
@@ -348,8 +393,10 @@ export default function OnboardingForm() {
       year_of_study: formData.year_of_study,
       clubs: formData.clubs,
       onboarding_complete: true,
-      questions: questionsPayload
+      questions: questionAnswers,
+      social_media: socialMediaValue,
     };
+    console.log("Payload:", payload);
     const { data, error } = await supabase
       .from("users")
       .update(payload)
@@ -363,7 +410,10 @@ export default function OnboardingForm() {
   }
 
   // Render autocomplete input for major and origin.
-  const renderAutocompleteInput = (key: keyof FormData, placeholder: string) => (
+  const renderAutocompleteInput = (
+    key: keyof FormData,
+    placeholder: string
+  ) => (
     <div className="relative">
       <Input
         type="text"
@@ -371,7 +421,7 @@ export default function OnboardingForm() {
         onChange={(e) =>
           setFormData((prev) => ({
             ...prev,
-            [key]: e.target.value
+            [key]: e.target.value,
           }))
         }
         placeholder={placeholder}
@@ -385,7 +435,7 @@ export default function OnboardingForm() {
               onClick={() =>
                 setFormData((prev) => ({
                   ...prev,
-                  [key]: item
+                  [key]: item,
                 }))
               }
               className="p-2 hover:bg-gray-100 cursor-pointer"
@@ -398,7 +448,7 @@ export default function OnboardingForm() {
     </div>
   );
 
-  // Render multi-select for clubs (no preset options).
+  // Render multi-select for clubs.
   const renderMultiSelect = () => (
     <div>
       <div className="flex flex-wrap gap-2 mb-2">
@@ -409,7 +459,7 @@ export default function OnboardingForm() {
           >
             {club}
             <button onClick={() => removeClub(club)} className="ml-1 text-sm">
-              ×
+              X
             </button>
           </span>
         ))}
@@ -425,95 +475,111 @@ export default function OnboardingForm() {
     </div>
   );
 
-  // Render custom questions step.
+  // Render custom questions step using multiple buttons.
   const renderCustomQuestions = () => {
-    // Filter available questions by removing already answered ones.
-    const availableQuestions = questionOptions.filter(
-      (q) => !answeredQuestions.some((aq) => aq.question === q)
-    );
-    return (
-      <div>
-        <div className="mb-4">
-          {answeredQuestions.length > 0 && (
-            <div>
-              <h3 className="text-lg font-semibold mb-2">Answered Questions</h3>
-              <ul className="list-disc pl-5">
-                {answeredQuestions.map((aq, index) => (
-                  <li key={index}>
-                    <span className="font-medium">{aq.question}:</span> {aq.answer}
-                  </li>
-                ))}
-              </ul>
-            </div>
+    if (selectedQuestions.length < 3) {
+      return (
+        <div>
+          <p className="text-xl font-medium mb-2">{currentStepData.label}</p>
+          <p className="mb-2">Select 3 questions to answer:</p>
+          <div className="flex flex-wrap gap-2">
+            {questionOptions
+              .filter((q) => !selectedQuestions.includes(q))
+              .map((q) => (
+                <Button
+                  key={q}
+                  onClick={() =>
+                    setSelectedQuestions((prev) => [...prev, q])
+                  }
+                >
+                  {q}
+                </Button>
+              ))}
+          </div>
+          <div className="mt-4">
+            <p className="font-medium">Selected Questions:</p>
+            <ul className="list-disc pl-5">
+              {selectedQuestions.map((q, index) => (
+                <li key={index}>{q}</li>
+              ))}
+            </ul>
+          </div>
+          {error && (
+            <p className="mt-2 text-sm text-red-600 font-medium">{error}</p>
           )}
         </div>
-        {answeredQuestions.length < 3 && (
-          <div className="mb-4">
-            <p className="mb-2 font-medium">
-              {selectedQuestion
-                ? `Answering: "${selectedQuestion}"`
-                : "Select a question to answer:"}
-            </p>
-            {availableQuestions.length > 0 ? (
-              <select
-                className="mb-2 p-2 border border-gray-300 rounded w-full"
-                value={selectedQuestion || availableQuestions[0]}
-                onChange={(e) => setSelectedQuestion(e.target.value)}
-              >
-                {availableQuestions.map((q) => (
-                  <option key={q} value={q}>
-                    {q}
-                  </option>
-                ))}
-              </select>
-            ) : (
-              <p>All questions answered.</p>
-            )}
-            <Input
-              type="text"
-              value={questionAnswer}
-              onChange={(e) => setQuestionAnswer(e.target.value)}
-              placeholder="Enter your answer (10-250 chars)"
-              className="w-full mb-2"
-            />
-            <Button
-              onClick={() => {
-                if (
-                  questionAnswer.trim().length < 10 ||
-                  questionAnswer.trim().length > 250
-                ) {
-                  setError("Answer must be between 10 and 250 characters.");
-                  return;
+      );
+    } else {
+      return (
+        <div>
+          <p className="text-xl font-medium mb-2">Answer the selected questions:</p>
+          {selectedQuestions.map((q, index) => (
+            <div key={index} className="mb-4">
+              <p className="font-medium">{q}</p>
+              <Input
+                type="text"
+                value={questionAnswers[q] || ""}
+                onChange={(e) =>
+                  setQuestionAnswers((prev) => ({
+                    ...prev,
+                    [q]: e.target.value,
+                  }))
                 }
-                if (!selectedQuestion) return;
-                setAnsweredQuestions((prev) => [
-                  ...prev,
-                  { question: selectedQuestion, answer: questionAnswer }
-                ]);
-                setSelectedQuestion("");
-                setQuestionAnswer("");
-                setError("");
-              }}
-            >
-              Add Question
-            </Button>
-          </div>
-        )}
-        {answeredQuestions.length === 3 && (
-          <p className="text-green-600 font-medium">
-            You have reached the limit of 3 questions.
-          </p>
-        )}
-      </div>
-    );
+                placeholder="Enter your answer (10-250 chars)"
+                className="w-full"
+              />
+            </div>
+          ))}
+          {error && (
+            <p className="mt-2 text-sm text-red-600 font-medium">{error}</p>
+          )}
+        </div>
+      );
+    }
   };
 
+  // Render social media step.
+  const renderSocialMediaStep = () => (
+    <div className="mb-6">
+      <p className="text-xl font-medium mb-2">{currentStepData.label}</p>
+      <select
+        className="mb-2 p-2 border border-gray-300 rounded w-full"
+        value={selectedSocialMediaOption}
+        onChange={(e) => setSelectedSocialMediaOption(e.target.value)}
+      >
+        {(currentStepData as SocialMediaStep).options.map((option) => (
+          <option key={option} value={option}>
+            {option}
+          </option>
+        ))}
+      </select>
+      {selectedSocialMediaOption === "Instagram" && (
+        <Input
+          type="text"
+          value={instagramInput}
+          onChange={(e) => setInstagramInput(e.target.value)}
+          placeholder="Enter your Instagram username or link"
+          className="w-full"
+        />
+      )}
+      {selectedSocialMediaOption === "Email" && (
+        <div className="w-full">
+          <p className="text-gray-700">Using your account email:</p>
+          <Input type="email" value={userEmail} disabled className="w-full" />
+        </div>
+      )}
+      {error && (
+        <p className="mt-2 text-sm text-red-600 font-medium">{error}</p>
+      )}
+    </div>
+  );
+
   return (
-    <div className="flex items-center justify-center bg-gray-50 relative overflow-hidden mb-32">
+    <div className="flex items-center justify-center bg-gray-50 relative overflow-hidden mb-32 px-4">
       {/* Dotted background */}
       <div className="absolute inset-0 z-0 bg-dots" />
       {/* Main Card */}
-      <Card className="relative z-10 w-full max-w-3xl p-6 shadow-2xl">
+      <Card className="relative z-10 w-full max-w-3xl mx-auto p-6 shadow-2xl">
         <CardHeader className="mb-4">
           <CardTitle className="text-3xl font-bold text-center">
             Onboarding
@@ -522,7 +588,7 @@ export default function OnboardingForm() {
             Let's get you set up.
           </CardDescription>
         </CardHeader>
-        <AnimatePresence>
+        <AnimatePresence mode="wait">
           <motion.div
             key={currentStep}
             initial={{ opacity: 0, x: 50 }}
@@ -532,9 +598,6 @@ export default function OnboardingForm() {
           >
             <CardContent>
               <div className="mb-6">
-                <p className="text-xl font-medium mb-2">
-                  {currentStepData.label}
-                </p>
                 {currentStepData.type === "input" ? (
                   <>
                     {currentStepData.key === "major"
@@ -550,7 +613,7 @@ export default function OnboardingForm() {
                           onChange={(e) =>
                             setFormData((prev) => ({
                               ...prev,
-                              [currentStepData.key]: e.target.value
+                              [currentStepData.key]: e.target.value,
                             }))
                           }
                           placeholder={currentStepData.label}
@@ -580,29 +643,27 @@ export default function OnboardingForm() {
                   renderMultiSelect()
                 ) : currentStepData.type === "customQuestions" ? (
                   renderCustomQuestions()
+                ) : currentStepData.type === "social_media" ? (
+                  renderSocialMediaStep()
                 ) : null}
-                {error && (
+              </div>
+              {error && (
                   <p className="mt-2 text-sm text-red-600 font-medium">
                     {error}
                   </p>
                 )}
-              </div>
             </CardContent>
           </motion.div>
         </AnimatePresence>
         <CardFooter className="flex justify-between">
-          {currentStep > 0 && (
+          {currentStep > 0 ? (
             <Button variant="outline" onClick={handleBack}>
               Back
             </Button>
+          ) : (
+            <div />
           )}
-          <Button
-            onClick={handleNext}
-            disabled={
-              currentStepData.type === "customQuestions" &&
-              answeredQuestions.length < 3
-            }
-          >
+          <Button onClick={handleNext} className="ml-auto">
             {currentStep === steps.length - 1 ? "Submit" : "Next"}
           </Button>
         </CardFooter>
