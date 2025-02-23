@@ -26,8 +26,6 @@ function SignUpContent() {
         <div className="flex flex-col gap-2 mt-8">
           <Label htmlFor="email">Email</Label>
           <Input name="email" placeholder="you@example.com" required />
-          <Label htmlFor="username">Username</Label>
-          <Input name="username" placeholder="your username" required />
           <Label htmlFor="password">Password</Label>
           <Input
             type="password"
