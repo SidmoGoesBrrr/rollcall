@@ -4,7 +4,6 @@ import { createClient } from '@/utils/supabase/client';
 import { cookies } from 'next/headers';
 import Link from 'next/link';
 import { Pencil } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 import { signOutAction } from '@/app/actions';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
@@ -28,10 +27,11 @@ interface Profile {
 async function fetchProfile(profileId: string): Promise<Profile | null> {
   console.log('Fetching profile for:', profileId);
 
-  // Query Supabase for user details
   const { data, error } = await supabase
     .from('users')
-    .select('unique_id, username, gender, year_of_study, age, major, questions, clubs, residency, origin, likers, avatar_link')
+    .select(
+      'unique_id, username, gender, year_of_study, age, major, questions, clubs, residency, origin, likers, avatar_link'
+    )
     .ilike('username', profileId)
     .single();
 
@@ -39,7 +39,6 @@ async function fetchProfile(profileId: string): Promise<Profile | null> {
     console.error('Error fetching profile:', error.message);
     return null;
   }
-  console.log(profileId === data?.unique_id);
   return data;
 }
 
@@ -51,49 +50,56 @@ export default async function ProfilePage({
   const { profileId } = await params;
   console.log(`Viewing profile of: ${profileId}`);
 
-  // ✅ Get logged-in user ID from cookies (DO NOT AWAIT)
+  // Get logged-in user ID from cookies (server-side)
   const cookiesStore = await cookies();
   const loggedInUserID = cookiesStore.get('usernameID')?.value;
   console.log(`Logged in User ID from cookies: ${loggedInUserID}`);
 
-  // ✅ Fetch Profile Data (AWAIT fetchProfile)
+  // Fetch Profile Data
   const profile = await fetchProfile(profileId);
   if (!profile) return notFound();
 
-  // ✅ Check if the logged-in user is the owner
+  // Check if the logged-in user is the profile owner
   const isOwnProfile = loggedInUserID === profile.unique_id;
-  console.log(`Is own profile? ${isOwnProfile}`);
 
   return (
     <div className="flex flex-col md:flex-row items-start justify-center min-h-screen p-6 bg-transparent text-text pt-24">
       {/* Left Column: Profile Image and Basic Info */}
-      <div className="md:w-1/3 flex flex-col items-start justify-center">
-        <img
-          src={profile.avatar_link}
-          alt={`${profile.username}'s Profile`}
-          className="w-60 h-60 rounded-lg object-cover shadow-lg"
-        />
-
-        <div className="bg-gray-600 p-4 rounded-lg shadow-lg text-center mt-4 w-full">
-          <h1 className="text-2xl text-[#d9a14e] font-bold">{profile.username}</h1>
-          <p className="text-xl text-[#cba162] font-semibold mt-2">
-            {profile.age} | {profile.gender} | {profile.year_of_study}
-          </p>
-          <p className="text-[#e5c99d] font-semibold">{profile.major}</p>
+      <div className="md:w-1/3 flex flex-col items-center justify-between h-full">
+        <div>
+          <img
+            src={profile.avatar_link}
+            alt={`${profile.username}'s Profile`}
+            className="w-60 h-60 rounded-lg object-cover shadow-lg"
+          />
+          <div className="bg-gray-600 p-4 rounded-lg shadow-lg text-center mt-4 w-full">
+            <h1 className="text-2xl text-[#d9a14e] font-bold">
+              {profile.username}
+            </h1>
+            <p className="text-xl text-[#cba162] font-semibold mt-2">
+              {profile.age} | {profile.gender} | {profile.year_of_study}
+            </p>
+            <p className="text-[#e5c99d] font-semibold">{profile.major}</p>
+          </div>
         </div>
 
+        {/* Buttons at the bottom */}
         {isOwnProfile && (
-          <div className="mt-4 flex flex-col items-center">
+          <div className="mt-6 w-full flex flex-col items-center">
             <Link
               href={`/profile/edit/${profileId}`}
-              className="bg-gray-500 hover:bg-gray-600 text-white font-semibold py-2 px-4 rounded-lg shadow-lg inline-flex items-center"
+              className="bg-gray-500 hover:bg-gray-600 text-white font-semibold py-2 px-4 rounded-lg shadow-lg inline-flex items-center mb-2"
             >
-              <Pencil className="mr-2" /> Edit Profile
+              <Pencil className="mr-2" />
+              Edit Profile
             </Link>
-            <form action={signOutAction} className="mt-2">
-              <Button type="submit" variant="outline" size="sm">
+            <form action={signOutAction}>
+              <button
+                type="submit"
+                className="bg-red-500 hover:bg-red-600 text-white font-semibold py-2 px-4 rounded-lg shadow-lg inline-flex items-center"
+              >
                 Sign Out
-              </Button>
+              </button>
             </form>
           </div>
         )}
@@ -104,64 +110,115 @@ export default async function ProfilePage({
         <Tabs defaultValue="profile">
           <TabsList className="flex space-x-4 border-b border-gray-700 w-full justify-start">
             <TabsTrigger value="profile">Profile</TabsTrigger>
-            {loggedInUserID && <TabsTrigger value="likes">Likes</TabsTrigger>}
+            {isOwnProfile && <TabsTrigger value="likes">Likes</TabsTrigger>}
           </TabsList>
 
           {/* Tab: Profile Details */}
           <TabsContent value="profile">
-            <div className="p-4 ">
-              <p>
-                <strong>Username:</strong> {profile.username}
-              </p>
-              <p>
-                <strong>Age:</strong> {profile.age}
-              </p>
-              <p>
-                <strong>Gender:</strong> {profile.gender}
-              </p>
-              <p>
-                <strong>Year of Study:</strong> {profile.year_of_study}
-              </p>
-              <p>
-                <strong>Major:</strong> {profile.major}
-              </p>
-              <p>
-                <strong>Residency:</strong> {profile.residency}
-              </p>
-              <p>
-                <strong>Origin:</strong> {profile.origin}
-              </p>
-              <p>
-                <strong>Clubs:</strong>{" "}
-                {Array.isArray(profile.clubs)
-                  ? profile.clubs.join(", ")
-                  : profile.clubs || "No clubs listed"}
-              </p>
-              <p>
-                <strong>Questions:</strong>{" "}
-                {Array.isArray(profile.questions)
-                  ? profile.questions.join(", ")
-                  : typeof profile.questions === "object" && profile.questions !== null
-                    ? Object.entries(profile.questions)
-                      .map(([question, answer]) => `${question}: ${answer}`)
-                      .join(" | ")
-                    : profile.questions || "No questions answered"}
-              </p>
+            <div className="p-4 w-[650px]">
+              <ul className="space-y-3">
+                <li className="bg-orange-200 p-3 rounded-lg shadow-sm">
+                  <p className="text-lg font-medium text-orange-600">
+                    <strong>Username:</strong> {profile.username}
+                  </p>
+                </li>
+
+                <li className="bg-orange-200 p-3 rounded-lg shadow-sm">
+                  <p className="text-lg font-medium text-orange-600">
+                    <strong>Age:</strong> {profile.age}
+                  </p>
+                </li>
+
+                <li className="bg-orange-200 p-3 rounded-lg shadow-sm">
+                  <p className="text-lg font-medium text-orange-600">
+                    <strong>Gender:</strong> {profile.gender}
+                  </p>
+                </li>
+
+                <li className="bg-orange-200 p-3 rounded-lg shadow-sm">
+                  <p className="text-lg font-medium text-orange-600">
+                    <strong>Year of Study:</strong> {profile.year_of_study}
+                  </p>
+                </li>
+
+                <li className="bg-orange-200 p-3 rounded-lg shadow-sm">
+                  <p className="text-lg font-medium text-orange-600">
+                    <strong>Major:</strong> {profile.major}
+                  </p>
+                </li>
+
+                <li className="bg-orange-200 p-3 rounded-lg shadow-sm">
+                  <p className="text-lg font-medium text-orange-600">
+                    <strong>Residency:</strong> {profile.residency}
+                  </p>
+                </li>
+
+                <li className="bg-orange-200 p-3 rounded-lg shadow-sm">
+                  <p className="text-lg font-medium text-orange-600">
+                    <strong>Origin:</strong> {profile.origin}
+                  </p>
+                </li>
+
+                <li className="bg-orange-200 p-3 rounded-lg shadow-sm">
+                  <p className="text-lg font-medium text-orange-600">
+                    <strong>Clubs:</strong>
+                  </p>
+                  {Array.isArray(profile.clubs) ? (
+                    <ul className="ml-6 list-disc text-orange-700">
+                      {profile.clubs.map((club, idx) => (
+                        <li key={idx}>{club}</li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <p className="ml-2 text-orange-700">
+                      {profile.clubs || 'No clubs listed'}
+                    </p>
+                  )}
+                </li>
+
+                <li className="bg-orange-200 p-3 rounded-lg shadow-sm">
+                  <p className="text-lg font-medium text-orange-600">
+                    <strong>Questions:</strong>
+                  </p>
+                  {Array.isArray(profile.questions) ? (
+                    <ul className="ml-6 list-disc text-orange-700">
+                      {profile.questions.map((q, idx) => (
+                        <li key={idx}>{q}</li>
+                      ))}
+                    </ul>
+                  ) : typeof profile.questions === 'object' &&
+                    profile.questions !== null ? (
+                    <ul className="ml-6 list-disc text-orange-700">
+                      {Object.entries(profile.questions).map(([q, a]) => (
+                        <li key={q}>
+                          <strong>{q}:</strong> {a}
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <p className="ml-2 text-orange-700">
+                      {profile.questions || 'No questions answered'}
+                    </p>
+                  )}
+                </li>
+              </ul>
             </div>
           </TabsContent>
 
-          {/* Tab: Likes (only visible if logged in) */}
-          {loggedInUserID && (
+          {/* Tab: Likes (only visible if the profile owner is logged in) */}
+          {isOwnProfile && (
             <TabsContent value="likes" className="flex-grow overflow-auto max-h-90">
               <div className="p-4 w-[650px]">
                 {profile.likers && profile.likers.length > 0 ? (
                   <ul className="space-y-3">
-                    {profile.likers.map((liker: any, index: number) => (
-                      <li key={index} className="flex items-center bg-orange-200 p-3 rounded-lg shadow-sm">
-                        <div className="w-10 h-10 text-text rounded-full bg-orange-300 flex items-center justify-center text-black font-bold">
-                          {liker.charAt(0).toUpperCase()}
+                    {profile.likers.map((liker, index) => (
+                      <li
+                        key={index}
+                        className="flex items-center bg-orange-200 p-3 rounded-lg shadow-sm"
+                      >
+                        <div className="text-lg font-medium text-orange-600">
+                          {liker}
                         </div>
-                        <span className="ml-3 text-lg font-medium text-orange-600">{liker}</span>
                       </li>
                     ))}
                   </ul>
@@ -171,7 +228,6 @@ export default async function ProfilePage({
               </div>
             </TabsContent>
           )}
-
         </Tabs>
       </div>
     </div>

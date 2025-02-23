@@ -6,7 +6,23 @@ import { createClient } from "@/utils/supabase/client";
 import { getCookie, setCookie } from "cookies-next";
 import { get } from "http";
 import { useRouter } from "next/navigation"; // ✅ Correct import for Next.js App Router
-
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 const supabase = createClient();
 
 interface FormData {
@@ -243,6 +259,7 @@ useEffect(() => {
         ) : (
           <div className="flex items-center space-x-4">
             {(currentQuestion as SelectStep).options.map((option, index) => (
+              
               <button
                 key={option}
                 onClick={() => setSelectedOption(index)}
@@ -264,6 +281,7 @@ useEffect(() => {
           {currentStep === steps.length - 1 ? "Submit" : "Next"}
         </Button>
       </div>
+ 
     </div>
   );
 }
