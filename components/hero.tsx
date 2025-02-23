@@ -21,6 +21,10 @@ const Highlight = ({ children, className }: HighlightProps) => (
 );
 
 export default function Hero() {
+  const defaultUrl = process.env.VERCEL_URL
+  ? `https://${process.env.VERCEL_URL}`
+  : "http://localhost:3000";
+
   return (
     <div className="relative h-screen overflow-hidden">
       {/* Main Text Content */}
@@ -95,7 +99,7 @@ export default function Hero() {
           </div>
           <div className="mt-8 flex flex-col sm:flex-row gap-4 justify-center">
             <Link
-              href="http://localhost:3000/sign-up"
+              href={`${defaultUrl}/sign-up`}
               className="px-6 py-3 sm:px-8 sm:py-3 bg-blue-600 hover:bg-blue-700 rounded-full text-white font-semibold transition"
             >
               Get Started
