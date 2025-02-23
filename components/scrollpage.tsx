@@ -7,7 +7,7 @@ import {
 } from '@/components/ui/hover-card';
 import { useState } from 'react';
 import confetti from 'canvas-confetti';
-
+import { motion } from "framer-motion";
 
 export default function Hero() {
   const [liked, setLiked] = useState<Record<number, boolean>>({});
@@ -82,61 +82,50 @@ export default function Hero() {
   ];
   
   return (
-    <div className="relative h-screen flex flex-col items-center gap-10 p-5">
+    <div className="snap-y snap-mandatory overflow-y-scroll h-screen w-full">
       {profiles.map((profile, index: number) => {
         const profileUrl = `/profile/${profile.name.toLowerCase().replace(/\s+/g, "-")}`;
   
         return (
-          <div key={index} className="w-[438px] h-[750px] rounded-3xl shadow-xl p-5 flex flex-col bg-white">
-            <a href={profileUrl} className="h-[438px] w-full bg-gray-100 rounded-lg overflow-hidden block">
-              <img
-                src={profile.image}
-                alt={`${profile.name} Profile`}
-                className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
-              />
-            </a>
-            
-            <div className="mt-5 w-full bg-gray-500 p-5 rounded-lg text-center text-white relative">
-              <button 
-                className={`absolute top-5 right-5 p-3 rounded-full transition-all duration-300 transform ${liked[index] ? 'bg-blue-900 scale-125' : 'bg-gray-600 hover:bg-blue-500'}`} 
-                onClick={(event) => handleLike(index, event)}
-              >
-                <ThumbsUp className="text-white text-2xl" />
-              </button>
+          <div 
+            key={index} 
+            className="snap-start flex-shrink-0 h-screen w-full flex items-center justify-center"
+          >
+            <div className="w-[438px] h-[750px] rounded-3xl shadow-xl p-5 flex flex-col bg-white">
+              <a href={profileUrl} className="h-[438px] w-full bg-gray-100 rounded-lg overflow-hidden block">
+                <img
+                  src={profile.image}
+                  alt={`${profile.name} Profile`}
+                  className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
+                />
+              </a>
               
-              <span className="text-2xl font-bold block">{profile.name}</span>
-              <span className="block text-lg mt-3">
-                {profile.age} | {profile.gender} | {profile.status}
-              </span>
-              <span className="block text-lg">{profile.field}</span>
-  
-              <div className="mt-5 flex flex-col gap-2">
-                <HoverCard>
-                  <HoverCardTrigger asChild>
-                    <button className="bg-blue-500 text-white py-2 px-4 rounded-lg hover:bg-blue-700">
-                      What inspired you to study {profile.field}?
-                    </button>
-                  </HoverCardTrigger>
-                  <HoverCardContent className="bg-slate-100 text-black p-3 rounded-md shadow-md">{profile.ans_1}</HoverCardContent>
-                </HoverCard>
+              <div className="mt-5 w-full bg-gray-500 p-5 rounded-lg text-center text-white relative">
+                <button 
+                  className={`absolute top-5 right-5 p-3 rounded-full transition-all duration-300 transform ${liked[index] ? 'bg-blue-900 scale-125' : 'bg-gray-600 hover:bg-blue-500'}`} 
+                  onClick={(event) => handleLike(index, event)}
+                >
+                  <ThumbsUp className="text-white text-2xl" />
+                </button>
                 
-                <HoverCard>
-                  <HoverCardTrigger asChild>
-                    <button className="bg-blue-500 text-white py-2 px-4 rounded-lg hover:bg-blue-700">
-                      What are your career goals?
-                    </button>
-                  </HoverCardTrigger>
-                  <HoverCardContent className="bg-slate-100 text-black p-3 rounded-md shadow-md">{profile.ans_2}</HoverCardContent>
-                </HoverCard>
-                
-                <HoverCard>
-                  <HoverCardTrigger asChild>
-                    <button className="bg-blue-500 text-white py-2 px-4 rounded-lg hover:bg-blue-700">
-                      What advice do you have for students?
-                    </button>
-                  </HoverCardTrigger>
-                  <HoverCardContent className="bg-slate-100 text-black p-3 rounded-md shadow-md">{profile.ans_3}</HoverCardContent>
-                </HoverCard>
+                <span className="text-2xl font-bold block">{profile.name}</span>
+                <span className="block text-lg mt-3">
+                  {profile.age} | {profile.gender} | {profile.status}
+                </span>
+                <span className="block text-lg">{profile.field}</span>
+
+                <div className="mt-5 flex flex-col gap-2">
+                  {[profile.ans_1, profile.ans_2, profile.ans_3].map((answer, i) => (
+                    <HoverCard key={i}>
+                      <HoverCardTrigger asChild>
+                        <button className="bg-blue-500 text-white py-2 px-4 rounded-lg hover:bg-blue-700">
+                          {i === 0 ? "What inspired you?" : i === 1 ? "Career goals?" : "Advice for students?"}
+                        </button>
+                      </HoverCardTrigger>
+                      <HoverCardContent className="bg-slate-100 text-black p-3 rounded-md shadow-md">{answer}</HoverCardContent>
+                    </HoverCard>
+                  ))}
+                </div>
               </div>
             </div>
           </div>
