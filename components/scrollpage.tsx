@@ -12,6 +12,22 @@ import { createClient } from "@/utils/supabase/client";
 
 const supabase = createClient();
 
+// Helper to get the current user's social media URL using their unique_id
+export async function getSocialMediaFromUniqueID(uniqueID: string): Promise<string | null> {
+  const { data, error } = await supabase
+    .from("users")
+    .select("social_media")
+    .eq("unique_id", uniqueID)
+    .single();
+
+  if (error || !data) {
+    console.error("Error fetching social media for uniqueID:", uniqueID, error);
+    return null;
+  }
+  return data.social_media;
+}
+
+// Helper to get the username from unique_id (already defined in your code)
 export async function getUsernameFromUniqueID(uniqueID: string): Promise<string | null> {
   const { data, error } = await supabase
     .from("users")
@@ -20,16 +36,14 @@ export async function getUsernameFromUniqueID(uniqueID: string): Promise<string 
     .single();
 
   if (error || !data) {
-    console.error("Error fetching username for unique_id:", uniqueID, error);
+    console.error("Error fetching username for uniqueID:", uniqueID, error);
     return null;
   }
   return data.username;
 }
 
-
 export function getLoggedInUserID(): string | undefined {
-  const loggedInUserID = Cookies.get("usernameID");
-  return loggedInUserID;
+  return Cookies.get("usernameID");
 }
 
 interface Profile {
@@ -40,20 +54,22 @@ interface Profile {
   major: string;
   questions: { [question: string]: string };
   avatar_link: string;
+  social_media: string;  // User's own social media URL (e.g., their Instagram)
+  email: string;         // The email address of the user (to receive mail)
 }
 
 export default function Hero() {
   const [profiles, setProfiles] = useState<Profile[]>([]);
   const [loading, setLoading] = useState(true);
   const [liked, setLiked] = useState<Record<number, boolean>>({});
-  const supabase = createClient();
-
 
   useEffect(() => {
     async function fetchProfiles() {
       const { data, error } = await supabase
         .from("users")
-        .select("username, age, gender, year_of_study, major, questions, avatar_link");
+        .select(
+          "username, age, gender, year_of_study, major, questions, avatar_link, social_media, email"
+        );
       if (error) {
         console.error("Error fetching profiles:", error);
       } else if (data) {
@@ -62,73 +78,83 @@ export default function Hero() {
       setLoading(false);
     }
     fetchProfiles();
-  }, [supabase]);
+  }, []);
 
-  // Function to update the likers array in Supabase
   async function updateLikers(
     likedProfileUsername: string,
     likerUsername: string,
     remove: boolean
   ) {
-    // Fetch the current likers array for the liked profile
     const { data, error } = await supabase
       .from("users")
       .select("likers")
       .eq("username", likedProfileUsername)
       .single();
-  
+
     if (error) {
       console.error("Error fetching likers:", error);
       return;
     }
-  
-    // Ensure we have an array (default to empty)
+
     let currentLikers: string[] = data.likers || [];
-  
+
     if (remove) {
-      // Remove the liker from the array when unliking
       currentLikers = currentLikers.filter((liker) => liker !== likerUsername);
     } else {
-      // Add the liker if not already present when liking
       if (!currentLikers.includes(likerUsername)) {
         currentLikers.push(likerUsername);
       }
     }
-  
-    // Update the user's record with the new likers array
+
     const { error: updateError } = await supabase
       .from("users")
       .update({ likers: currentLikers })
       .eq("username", likedProfileUsername);
-  
+
     if (updateError) {
       console.error("Error updating likers:", updateError);
     }
   }
+  
+  // Function to send an email using the provided variables
+const sendEmail = async (profile: Profile, likerUsername: string, likerSocialMedia: string) => {
+  try {
+    const response = await fetch("/api/sendMail", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        to: profile.email,              // Email of the person who is liked
+        firstName: profile.username,    // Their username (first name)
+        likedBy: likerUsername,         // The user who liked the profile
+        social_media: likerSocialMedia, // YOUR (the liker's) social media URL
+        SiteURL: "https://stunite.tech", // Constant URL
+      }),
+    });
 
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error || "Failed to send email");
+    console.log("Email sent successfully!");
+  } catch (err: any) {
+    console.error("Error sending email:", err.message);
+  }
+};
 
   const handleLike = async (
     index: number,
     event: React.MouseEvent<HTMLButtonElement>
   ) => {
-    const likerUsername = getLoggedInUserID();
-    if (!likerUsername) {
+    const currentUserUniqueID = getLoggedInUserID();
+    if (!currentUserUniqueID) {
       console.error("User is not logged in");
       return;
     }
-
-    // Capture the target immediately
+  
+    // Capture the target and compute the confetti origin immediately
     const target = event.currentTarget;
-    if (!target) {
-      console.error("event.currentTarget is null");
-      return;
-    }
-    
-    // Compute the bounding rect synchronously
     const rect = target.getBoundingClientRect();
     const x = (rect.left + rect.width / 2) / window.innerWidth;
     const y = (rect.top + rect.height / 2) / window.innerHeight;
-    
+  
     const newLikeState = !liked[index];
     setLiked((prev) => ({
       ...prev,
@@ -144,19 +170,24 @@ export default function Hero() {
         scalar: 1.2,
         origin: { x, y },
       });
-      const loggedInUserID = getLoggedInUserID();
-      if (!loggedInUserID) {
-        console.error("User is not logged in");
-        return;
-      }
-      const likerUsername = await getUsernameFromUniqueID(loggedInUserID);
-      if (likerUsername) {
-        await updateLikers(profiles[index].username, likerUsername, false);
+  
+      // Get current user's username and social media
+      const likerUsername = await getUsernameFromUniqueID(currentUserUniqueID);
+      const likerSocialMedia = await getSocialMediaFromUniqueID(currentUserUniqueID);
+      if (likerUsername && likerSocialMedia) {
+        const likedProfile = profiles[index];
+  
+        await updateLikers(likedProfile.username, likerUsername, false);
+  
+        // Send email with YOUR (liker's) social media link
+        await sendEmail(likedProfile, likerUsername, likerSocialMedia);  // Passing the liker's social media here
       }
     } else {
-      // handle unlike: remove current user from the likers array
+      // For unliking, simply remove the current user from the likers array
+      const likerUsername = await getUsernameFromUniqueID(currentUserUniqueID);
       if (likerUsername) {
-        await updateLikers(profiles[index].username, likerUsername, true);
+        const likedProfile = profiles[index];
+        await updateLikers(likedProfile.username, likerUsername, true);
       }
     }
   };
@@ -166,14 +197,15 @@ export default function Hero() {
   }
 
   return (
-    <div className="snap-y snap-mandatory overflow-y-auto h-screen w-full hide-scrollbar" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}> 
+    <div
+      className="snap-y snap-mandatory overflow-y-auto h-screen w-full hide-scrollbar"
+      style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+    >
       {profiles.length === 0 ? (
         <p>No profiles found.</p>
       ) : (
         profiles.map((profile, index) => {
-          const profileUrl = `/profile/${profile.username
-            .toLowerCase()
-            .replace(/\s+/g, "-")}`;
+          const profileUrl = `/profile/${profile.username.toLowerCase().replace(/\s+/g, "-")}`;
           return (
             <div
               key={profile.username}
@@ -186,9 +218,8 @@ export default function Hero() {
                 >
                   <img
                     src={
-                      profile.avatar_link
-                        ? profile.avatar_link
-                        : "https://ymmorqp8r30uwwon.public.blob.vercel-storage.com/sid-2WA1MmsfN7s0pnc5WbgWBPuwY14w58.png"
+                      profile.avatar_link ||
+                      "https://ymmorqp8r30uwwon.public.blob.vercel-storage.com/sid-2WA1MmsfN7s0pnc5WbgWBPuwY14w58.png"
                     }
                     alt={`${profile.username} Profile`}
                     className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
@@ -218,8 +249,8 @@ export default function Hero() {
                   <div className="mt-5 flex flex-col gap-2">
                     {Object.entries(profile.questions)
                       .filter(([question, answer]) => answer && answer.trim() !== "")
-                      .map(([question, answer], index) => (
-                        <HoverCard key={index}>
+                      .map(([question, answer], idx) => (
+                        <HoverCard key={idx}>
                           <HoverCardTrigger asChild>
                             <button className="bg-blue-500 text-white py-2 px-4 rounded-lg hover:bg-blue-700">
                               {question}
@@ -229,7 +260,7 @@ export default function Hero() {
                             {answer}
                           </HoverCardContent>
                         </HoverCard>
-                    ))}
+                      ))}
                   </div>
                 </div>
               </div>

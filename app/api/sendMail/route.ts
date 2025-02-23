@@ -35,10 +35,10 @@ export async function POST(request: Request) {
     const response = await axios.post(
       `https://api.mailgun.net/v3/${mailgunDomain}/messages`,
       new URLSearchParams({
-        from: "Mailgun Sandbox <postmaster@auth.stunite.tech>",
+        from: "No Reply <no-reply@auth.stunite.tech>",
         to,
         subject: `Hey ${firstName}, You Might Have a New Friend!`,
-        template: "like_alert",
+        template: "like alert",
         "h:X-Mailgun-Variables": JSON.stringify({
           FirstName: firstName,
           LikedBy: likedBy,
