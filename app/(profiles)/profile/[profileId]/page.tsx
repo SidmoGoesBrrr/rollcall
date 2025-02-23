@@ -51,16 +51,16 @@ export default async function ProfilePage({
   const { profileId } = await params;
   console.log(`Viewing profile of: ${profileId}`);
 
-  // ✅ Get logged-in user ID from cookies (DO NOT AWAIT)
+  // Get logged-in user ID from cookies (server-side)
   const cookiesStore = await cookies();
   const loggedInUserID = cookiesStore.get('usernameID')?.value;
   console.log(`Logged in User ID from cookies: ${loggedInUserID}`);
 
-  // ✅ Fetch Profile Data (AWAIT fetchProfile)
+  // Fetch Profile Data
   const profile = await fetchProfile(profileId);
   if (!profile) return notFound();
 
-  // ✅ Check if the logged-in user is the owner
+  // Check if the logged-in user is the profile owner
   const isOwnProfile = loggedInUserID === profile.unique_id;
   console.log(`Is own profile? ${isOwnProfile}`);
 
@@ -104,7 +104,8 @@ export default async function ProfilePage({
         <Tabs defaultValue="profile">
           <TabsList className="flex space-x-4 border-b border-gray-700 w-full justify-start">
             <TabsTrigger value="profile">Profile</TabsTrigger>
-            {loggedInUserID && <TabsTrigger value="likes">Likes</TabsTrigger>}
+            {/* Only show Likes tab if the logged-in user is the profile owner */}
+            {isOwnProfile && <TabsTrigger value="likes">Likes</TabsTrigger>}
           </TabsList>
 
           {/* Tab: Profile Details */}
@@ -143,20 +144,20 @@ export default async function ProfilePage({
                   ? profile.questions.join(", ")
                   : typeof profile.questions === "object" && profile.questions !== null
                     ? Object.entries(profile.questions)
-                      .map(([question, answer]) => `${question}: ${answer}`)
-                      .join(" | ")
+                        .map(([question, answer]) => `${question}: ${answer}`)
+                        .join(" | ")
                     : profile.questions || "No questions answered"}
               </p>
             </div>
           </TabsContent>
 
-          {/* Tab: Likes (only visible if logged in) */}
-          {loggedInUserID && (
+          {/* Tab: Likes (only visible if the profile owner is logged in) */}
+          {isOwnProfile && (
             <TabsContent value="likes" className="flex-grow overflow-auto max-h-90">
               <div className="p-4 w-[650px]">
                 {profile.likers && profile.likers.length > 0 ? (
                   <ul className="space-y-3">
-                    {profile.likers.map((liker: any, index: number) => (
+                    {profile.likers.map((liker, index) => (
                       <li key={index} className="flex items-center bg-orange-200 p-3 rounded-lg shadow-sm">
                         <div className="w-10 h-10 text-text rounded-full bg-orange-300 flex items-center justify-center text-black font-bold">
                           {liker.charAt(0).toUpperCase()}
