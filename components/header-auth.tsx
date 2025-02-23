@@ -3,22 +3,27 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
 import { createClient } from "@/utils/supabase/client";
 import { CircleUser } from "lucide-react";
-import { getCookie } from "cookies-next";
 
 export default function AuthButton() {
   const supabase = createClient();
   const [user, setUser] = useState<{ unique_id: string; username: string } | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const fetchUser = async () => {
+  // Fetch the user's profile using their email from the session.
+  const fetchUser = async (userEmail?: string) => {
     setLoading(true);
-    const usernameID = getCookie("usernameID");
 
-    if (!usernameID) {
+    if (!userEmail) {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      userEmail = session?.user?.email || undefined;
+    }
+
+    if (!userEmail) {
       setUser(null);
       setLoading(false);
       return;
@@ -27,8 +32,8 @@ export default function AuthButton() {
     const { data, error } = await supabase
       .from("users")
       .select("unique_id, username")
-      .eq("unique_id", usernameID)
-      .single();
+      .eq("email", userEmail)
+      .maybeSingle();
 
     if (error || !data) {
       console.error("Error fetching user profile:", error?.message || "No user found");
@@ -41,29 +46,35 @@ export default function AuthButton() {
   };
 
   useEffect(() => {
+    // Initial fetch of the user profile
     fetchUser();
 
-    // ✅ Listen for login/logout events and re-fetch user data
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === "SIGNED_IN" || event === "SIGNED_OUT") {
-        fetchUser();
+    // Listen for auth state changes
+    const { data: subscription } = supabase.auth.onAuthStateChange(
+      (event, session) => {
+        if (event === "SIGNED_IN") {
+          if (session?.user?.email) {
+            fetchUser(session.user.email);
+          }
+        } else if (event === "SIGNED_OUT") {
+          setUser(null);
+        }
       }
-    });
+    );
 
     return () => {
-      subscription?.unsubscribe(); // Ensure cleanup
+      subscription?.subscription.unsubscribe();
     };
   }, []);
 
   if (loading) {
-    return <p>Loading...</p>;
+    return <p className="text-sm px-2">Loading...</p>;
   }
 
   if (!user) {
+    // If no user is logged in, show Sign in / Sign up
     return (
-      <div className="flex flex-col sm:flex-row items-center gap-2 p-4 text-sm">
+      <div className="flex items-center gap-2">
         <Button asChild size="sm" variant="outline">
           <Link href="/sign-in">Sign in</Link>
         </Button>
@@ -74,8 +85,9 @@ export default function AuthButton() {
     );
   }
 
+  // If user is logged in, show link to their profile
   return (
-    <div className="flex flex-col sm:flex-row items-center gap-4 p-4 text-sm">
+    <div className="flex items-center gap-4">
       <Link href={`/profile/${user.username}`}>
         <CircleUser size={24} className="cursor-pointer" />
       </Link>

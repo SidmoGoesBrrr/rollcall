@@ -38,7 +38,8 @@ export const updateSession = async (request: NextRequest) => {
       if (
         pathname !== "/" &&
         pathname !== "/sign-in" &&
-        pathname !== "/sign-up"
+        pathname !== "/sign-up" &&
+        pathname !== "/forgot-password"
       ) {
         return NextResponse.redirect(new URL("/", request.url));
       }

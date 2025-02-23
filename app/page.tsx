@@ -25,8 +25,10 @@ export default async function Home() {
   }
   else {
     return (
-    <>
-    <ScrollPage />
+      <>
+      <div className="w-full max-w-4xl mx-auto px-4 sm:px-3 md:px-6">
+          <ScrollPage />
+        </div>
     </>
   );
 }

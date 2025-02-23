@@ -4,7 +4,6 @@ import { EnvVarWarning } from "@/components/env-var-warning";
 import { Geist } from "next/font/google";
 import Link from "next/link";
 import "./globals.css";
-import { hasEnvVars } from "@/utils/supabase/check-env-vars";
 
 const defaultUrl = process.env.VERCEL_URL
   ? `https://${process.env.VERCEL_URL}`
@@ -27,40 +26,37 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={geistSans.className} suppressHydrationWarning>
-    <body className="bg-bg bg-dots text-text">
-       
-          <main className="min-h-screen flex flex-col items-center">
-            <div className="flex-1 w-full flex flex-col gap-20 items-center">
-              <nav className="w-full fixed top-0 z-50 bg-bw text-text shadow-md flex justify-center h-16">
-                <div className="w-full max-w-5xl flex justify-between items-center p-3 px-5 text-sm">
-                  <div className="flex gap-5 items-center font-semibold">
-                    <Link href={"/"}>Stunite - Make friends you actually like</Link>
-                    <div className="flex items-center gap-2">
-                    </div>
-                  </div>
-                  {!hasEnvVars ? <EnvVarWarning /> : <HeaderAuth />}
-                </div>
-              </nav>
-              <div className="flex flex-col gap-20 max-w-5xl p-5">
-                {children}
-              </div>
+    <html lang="en">
+      <body className="bg-white text-black">
+        {/* Fixed Header */}
+        <header className="fixed top-0 left-0 w-full z-50 bg-white border-b shadow-sm">
+          <nav className="h-14 sm:h-16 px-4 sm:px-6 md:px-8 flex items-center justify-between max-w-screen-lg mx-auto">
+            {/* Left: Logo / Brand */}
+            <Link href="/" className="text-lg font-bold">
+              Stunite
+            </Link>
+            {/* Right: Auth Buttons */}
+            <HeaderAuth />
+          </nav>
+        </header>
 
-              <footer className="w-full flex items-center justify-center border-t mx-auto text-center text-xs gap-8 py-16">
-                <p>
-                  Built for {" "}
-                  <a
-                    href="https://www3.cs.stonybrook.edu/~wics/hopperhacks/2025/"
-                    target="_blank"
-                    className="font-bold hover:underline"
-                    rel="noreferrer"
-                  >
-                    Hopper Hacks
-                  </a>
-                </p>
-              </footer>
-            </div>
-          </main>
+        {/* Main content offset by header height */}
+        <main className="pt-14 sm:pt-16">{children}</main>
+
+        {/* Footer */}
+        <footer className="mt-10 py-6 border-t text-center text-sm text-gray-500">
+          <p>
+            Built for{" "}
+            <a
+              href="https://www3.cs.stonybrook.edu/~wics/hopperhacks/2025/"
+              target="_blank"
+              className="font-semibold hover:underline"
+              rel="noreferrer"
+            >
+              Hopper Hacks
+            </a>
+          </p>
+        </footer>
       </body>
     </html>
   );

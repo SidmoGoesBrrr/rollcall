@@ -1,4 +1,3 @@
-// File path: components/scrollpage.tsx
 "use client";
 import { useState, useEffect } from "react";
 import { ThumbsUp } from "lucide-react";
@@ -28,7 +27,7 @@ export async function getSocialMediaFromUniqueID(uniqueID: string): Promise<stri
   return data.social_media;
 }
 
-// Helper to get the username from unique_id (already defined in your code)
+// Helper to get the username from unique_id
 export async function getUsernameFromUniqueID(uniqueID: string): Promise<string | null> {
   const { data, error } = await supabase
     .from("users")
@@ -57,6 +56,28 @@ interface Profile {
   avatar_link: string;
   social_media: string;  // User's own social media URL (e.g., their Instagram)
   email: string;         // The email address of the user (to receive mail)
+  onboarding_complete: boolean;
+}
+
+// New component to handle tap-to-toggle question display
+function QuestionCard({ question, answer }: { question: string; answer: string; }) {
+  const [open, setOpen] = useState(false);
+
+  return (
+    <HoverCard open={open} onOpenChange={setOpen}>
+      <HoverCardTrigger asChild>
+        <button
+          onClick={() => setOpen((prev) => !prev)}
+          className="bg-blue-500 text-white py-2 px-4 rounded-lg hover:bg-blue-700"
+        >
+          {question}
+        </button>
+      </HoverCardTrigger>
+      <HoverCardContent className="bg-slate-100 text-black p-3 rounded-md shadow-md">
+        {answer}
+      </HoverCardContent>
+    </HoverCard>
+  );
 }
 
 export default function Hero() {
@@ -69,8 +90,10 @@ export default function Hero() {
       const { data, error } = await supabase
         .from("users")
         .select(
-          "username, age, gender, year_of_study, major, questions, avatar_link, social_media, email"
-        );
+          "username, age, gender, year_of_study, major, questions, avatar_link, social_media, email, onboarding_complete"
+        )
+        // Only display profiles with onboarding_complete set to true
+        .eq("onboarding_complete", true);
       if (error) {
         console.error("Error fetching profiles:", error);
       } else if (data) {
@@ -118,27 +141,27 @@ export default function Hero() {
   }
   
   // Function to send an email using the provided variables
-const sendEmail = async (profile: Profile, likerUsername: string, likerSocialMedia: string) => {
-  try {
-    const response = await fetch("/api/sendMail", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        to: profile.email,              // Email of the person who is liked
-        firstName: profile.username,    // Their username (first name)
-        likedBy: likerUsername,         // The user who liked the profile
-        social_media: likerSocialMedia, // YOUR (the liker's) social media URL
-        SiteURL: "https://stunite.tech", // Constant URL
-      }),
-    });
+  const sendEmail = async (profile: Profile, likerUsername: string, likerSocialMedia: string) => {
+    try {
+      const response = await fetch("/api/sendMail", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          to: profile.email,              // Email of the person who is liked
+          firstName: profile.username,    // Their username (first name)
+          likedBy: likerUsername,         // The user who liked the profile
+          social_media: likerSocialMedia, // YOUR (the liker's) social media URL
+          SiteURL: "https://stunite.tech", // Constant URL
+        }),
+      });
 
-    const data = await response.json();
-    if (!response.ok) throw new Error(data.error || "Failed to send email");
-    console.log("Email sent successfully!");
-  } catch (err: any) {
-    console.error("Error sending email:", err.message);
-  }
-};
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || "Failed to send email");
+      console.log("Email sent successfully!");
+    } catch (err: any) {
+      console.error("Error sending email:", err.message);
+    }
+  };
 
   const handleLike = async (
     index: number,
@@ -179,9 +202,9 @@ const sendEmail = async (profile: Profile, likerUsername: string, likerSocialMed
         const likedProfile = profiles[index];
   
         await updateLikers(likedProfile.username, likerUsername, false);
-  
+        
         // Send email with YOUR (liker's) social media link
-        await sendEmail(likedProfile, likerUsername, likerSocialMedia);  // Passing the liker's social media here
+        await sendEmail(likedProfile, likerUsername, likerSocialMedia);
       }
     } else {
       // For unliking, simply remove the current user from the likers array
@@ -251,16 +274,7 @@ const sendEmail = async (profile: Profile, likerUsername: string, likerSocialMed
                     {Object.entries(profile.questions)
                       .filter(([question, answer]) => answer && answer.trim() !== "")
                       .map(([question, answer], idx) => (
-                        <HoverCard key={idx}>
-                          <HoverCardTrigger asChild>
-                            <button className="bg-blue-500 text-white py-2 px-4 rounded-lg hover:bg-blue-700">
-                              {question}
-                            </button>
-                          </HoverCardTrigger>
-                          <HoverCardContent className="bg-slate-100 text-black p-3 rounded-md shadow-md">
-                            {answer}
-                          </HoverCardContent>
-                        </HoverCard>
+                        <QuestionCard key={idx} question={question} answer={answer} />
                       ))}
                   </div>
                 </div>
