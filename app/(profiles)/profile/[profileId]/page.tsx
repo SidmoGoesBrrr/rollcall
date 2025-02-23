@@ -32,7 +32,7 @@ async function fetchProfile(profileId: string): Promise<Profile | null> {
   const { data, error } = await supabase
     .from('users')
     .select('unique_id, username, gender, year_of_study, age, major, questions, clubs, residency, origin, likers, avatar_link')
-    .eq('username', profileId)
+    .ilike('username', profileId)
     .single();
 
   if (error) {
