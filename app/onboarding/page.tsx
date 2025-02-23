@@ -11,7 +11,7 @@ export default function OnboardingPage() {
   
 
   return (
-    <div className="flex flex-col items-center">
+    <div className="flex flex-col items-center pt-32">
       <h1 className="text-4xl font-bold">Welcome to Stunite</h1>
       <p className="text-lg text-center">
         Stunite is a platform where you can meet friends you actually like.

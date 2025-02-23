@@ -1,4 +1,4 @@
-"use client"; // ✅ Convert to a Client Component
+"use client";
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
@@ -6,49 +6,53 @@ import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
 import { createClient } from "@/utils/supabase/client";
 import { CircleUser } from "lucide-react";
-import { getCookie } from "cookies-next"; // ✅ Fetch cookies on the client
+import { getCookie } from "cookies-next";
 
 export default function AuthButton() {
   const supabase = createClient();
   const [user, setUser] = useState<{ unique_id: string; username: string } | null>(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const fetchUser = async () => {
-      setLoading(true);
-      const usernameID = getCookie("usernameID");
+  const fetchUser = async () => {
+    setLoading(true);
+    const usernameID = getCookie("usernameID");
 
-      if (!usernameID) {
-        setUser(null);
-        setLoading(false);
-        return;
-      }
-
-      const { data, error } = await supabase
-        .from("users")
-        .select("unique_id, username")
-        .eq("unique_id", usernameID)
-        .single();
-
-      if (error || !data) {
-        console.error("Error fetching user profile:", error?.message || "No user found");
-        setUser(null);
-      } else {
-        setUser(data);
-      }
-
+    if (!usernameID) {
+      setUser(null);
       setLoading(false);
-    };
+      return;
+    }
 
+    const { data, error } = await supabase
+      .from("users")
+      .select("unique_id, username")
+      .eq("unique_id", usernameID)
+      .single();
+
+    if (error || !data) {
+      console.error("Error fetching user profile:", error?.message || "No user found");
+      setUser(null);
+    } else {
+      setUser(data);
+    }
+
+    setLoading(false);
+  };
+
+  useEffect(() => {
     fetchUser();
 
-    // ✅ Listen for login/logout events
-    const { data: authListener } = supabase.auth.onAuthStateChange(() => {
-      fetchUser(); // Re-fetch user data on auth change
+    // ✅ Listen for login/logout events and re-fetch user data
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === "SIGNED_IN" || event === "SIGNED_OUT") {
+        fetchUser();
+      }
     });
 
     return () => {
-      authListener.subscription.unsubscribe();
+      subscription?.unsubscribe(); // Ensure cleanup
     };
   }, []);
 
